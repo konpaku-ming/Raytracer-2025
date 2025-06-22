@@ -14,8 +14,6 @@ jobs:
         name: Checkout 🛎️
       - uses: dtolnay/rust-toolchain@stable
         name: Setup Cargo Toolchain 🛎️
-        with:
-          components: rustfmt, clippy
       - name: Running Tests 🚀
         run: cargo test --all-features
       - name: Check Code Format 🔧
