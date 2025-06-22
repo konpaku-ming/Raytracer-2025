@@ -36,6 +36,12 @@ Following are instructions on how to create a tag, push your code, and see the r
 ![GitHub Actions page](./doc/assets/github_actions.png)
 ![Download the output images](./doc/assets/download_output.png)
 
+```bash
+git commit -m "Your commit message"
+git tag your_tag_name  # Create a tag for the current commit
+git push origin your_tag_name  # Push the tag to GitHub
+```
+
 ### The Framework of the Project
 ```
 .
