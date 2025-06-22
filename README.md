@@ -31,10 +31,26 @@ This will automatically set up the environment and compile the code, then run th
 You need to share your code on GitHub, and we will use GitHub Actions to automatically run your code and generate the output images for checking. You can find the configuration file in `.github/workflows/run.yml`. This file will be automatically executed when you push your code onto GitHub with an arbitrary tag.
 
 Following are instructions on how to create a tag, push your code, and see the result in GitHub Actions (we use RustRover as an example):
+
+1. Enable GitHub Actions in your repository first.
+2. Create a tag for your local commit.
 ![Create a tag for a local commit](./doc/assets/add_tag.png)
+3. Push the code together with the tag.
 ![Push the code together with the tag](./doc/assets/push_tag.png)
+4. Check the GitHub Actions page to see if your code runs successfully.
 ![GitHub Actions page](./doc/assets/github_actions.png)
+5. Download the output images from the `Artifacts` section.
 ![Download the output images](./doc/assets/download_output.png)
+
+Or you can use the command line to create a tag and push it to GitHub:
+```bash
+git commit -m "Your commit message"
+git tag -a your_tag_name -m "Your tag message"  # Create a tag for the current commit
+git tag # List all tags
+git push origin your_tag_name  # Push the tag to GitHub
+git push origin main  --follow-tags  # Push the main branch and all tags to GitHub
+git push origin --tags  # Push all tags to GitHub, if you pushed the code without tags before
+```
 
 ### The Framework of the Project
 ```
