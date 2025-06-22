@@ -1,0 +1,3 @@
+- Support for `.obj` file
+    - An `obj-loader` is needed
+    - Polygons are supported (optional)

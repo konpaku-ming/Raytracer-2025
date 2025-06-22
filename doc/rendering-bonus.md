@@ -1,0 +1,6 @@
+- Complete [the third book](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html)
+    - Write a simple report about the PDF method in this book, at least 2 pages
+- CG-related techniques
+    - Edge detection, normal mapping, interpolation, texture mapping, rasterization, etc.
+    - Lens flare, depth of field, axis shift, exposure, etc.
+    - Read interesting books(e.g. 《Unity Shader 入门精要》) and implement other fancy features
