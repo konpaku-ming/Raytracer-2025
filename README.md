@@ -45,8 +45,11 @@ Following are instructions on how to create a tag, push your code, and see the r
 Or you can use the command line to create a tag and push it to GitHub:
 ```bash
 git commit -m "Your commit message"
-git tag your_tag_name  # Create a tag for the current commit
+git tag -a your_tag_name -m "Your tag message"  # Create a tag for the current commit
+git tag # List all tags
 git push origin your_tag_name  # Push the tag to GitHub
+git push origin main  --follow-tags  # Push the main branch and all tags to GitHub
+git push origin --tags  # Push all tags to GitHub, if you pushed the code without tags before
 ```
 
 ### The Framework of the Project
