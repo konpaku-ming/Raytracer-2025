@@ -9,6 +9,8 @@ fn main() {
 
     let width = 256;
     let height = 256;
+    // different from the book, we use image crate to create a .png image rather than outputting .ppm file, which is not widely used.
+    // anyway, you may output any image format you like.
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
     let progress = if option_env!("CI").unwrap_or_default() == "true" {
