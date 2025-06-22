@@ -1,4 +1,12 @@
-# Final works 2022
+# Final works 
+
+## 2024
+
+![acm_1](assets/2024/dzh.jpg)
+![acm_2](assets/2024/hcy.jpg)
+![acm_3](assets/2024/zjx.jpg)
+
+## 2022
 
 Reference to [raytracer-2022](https://github.com/ACMClassCourse-2021/PPCA-Raytracer-2022/tree/main/final_works).
 
@@ -27,4 +35,10 @@ Reference to [raytracer-2022](https://github.com/ACMClassCourse-2021/PPCA-Raytra
 
 ### interpolation
 
+Before interpolation
+
 <img src="assets/image-20230629191610723.png" alt="image-20230629191610723" style="zoom:100%;" />
+
+After interpolation
+
+<img src="assets/patrick.jpg" alt="image-20230629191626723" style="zoom:100%;" />
