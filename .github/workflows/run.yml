@@ -51,7 +51,7 @@ jobs:
         with:
           command: run
           args: --release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         name: Upload Artifacts 🚀
         with:
           name: output
