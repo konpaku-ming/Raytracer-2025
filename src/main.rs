@@ -1,7 +1,6 @@
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
-use std::{fs::File, process::exit};
 
 fn main() {
     let path = std::path::Path::new("output/book1/image1.png");
