@@ -1,5 +1,9 @@
-[workspace]
+[package]
+name = "raytracer"
+version = "0.1.0"
+edition = "2024"
 
-members = [
-    "raytracer"
-]
+[dependencies]
+image = "0.25.6"
+console = "0.15.11"
+indicatif = "0.17.11"
