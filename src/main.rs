@@ -10,7 +10,6 @@ fn main() {
 
     let width = 256;
     let height = 256;
-    let quality = 100;
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
     let progress = if option_env!("CI").unwrap_or_default() == "true" {
