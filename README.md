@@ -137,7 +137,7 @@ Just do some preparation work, including:
 
 #### Task 3 (40 pts): Advanced features
 - We divide suggested advanced features for your ray tracer into four parts: [rendering](./doc/rendering-bonus.md), [geometry](./doc/geometry-bonus.md), [animation](./doc/animation-bonus.md), and [optimization](./doc/optimization-bonus.md).
-- The points given are just a reference. Final points will be given based on the workload as well as the quality of your work.
+- The points given are just a reference. Final points will be given based on the workload as well as the quality of your work. (We use a question mark to indicate that the points are not fixed.)
 - Please contact TAs if you have any ideas about some other interesting features that you want to implement.
 
 #### Final scene (10 pts)
