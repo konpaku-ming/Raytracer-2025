@@ -133,73 +133,47 @@ Just do some preparation work, including:
 #### Task 2 (20 pts) : *Ray Tracing: The Next Week*
 
 - Complete [the second book](https://raytracing.github.io/books/RayTracingTheNextWeek.html)
-- Save each output image in the `output` folder.
-
-#### Task 3 (20 pts) : *Ray Tracing: The Rest of Your Life*
-
-- Complete [the third book](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html)
 - Save each output image in the `output` folder
 
-- Write a simple report about the PDF method in this book, at least 2 pages
+#### Task 3 (40 pts): Advanced features
+- We divide suggested advanced features for your ray tracer into four parts: [rendering](./doc/rendering-bonus.md), [geometry](./doc/geometry-bonus.md), [animation](./doc/animation-bonus.md), and [optimization](./doc/optimization-bonus.md).
+- The points given are just a reference. Final points will be given based on the workload as well as the quality of your work.
+- Please contact TAs if you have any ideas about some other interesting features that you want to implement.
 
-#### Task 4 (20 pts): Advanced features
+#### Final scene (10 pts)
+- Finally, you will need to create some kind of beautiful image with your ray tracer. Beauty is of course in the eye of the beholder, but generally we are looking for clear effort in the generation of one special "capstone" image for this assignment, beyond just basic debugging/confirming that the technical features work. Great artworks will get you extra points.
+- For this part you may use whatever resources you like, such as free COLLADA files from places like TurboSquid (or any other free online resource); you may also find it helpful to use free software like Blender to assemble a scene. 
+- Your final scene can act as a banner or a logo of our project `Ray Tracing`. Look at the current banner at the top of this page, you can make a better one, with your own ray tracer.
+- You can refer to [artworks](./doc/artworks) from the previous years for some inspiration.
 
-- Multi-threading to accelerate your ray tracer (strongly recommended)
-- Make a benchmark for your ray tracer
-- Support for `.obj` file
-  - An `obj-loader` is needed
-  - Polygons are supported (optional)
-- CG-related techniques
-  - Edge detection, normal mapping, interpolation, texture mapping, rasterization, etc.
-  - Lens flare, depth of field, axis shift, exposure, etc.
-  - Read interesting books(e.g. 《Unity Shader 入门精要》) and implement other fancy features
-- Exploring some [Rust features](./doc/rust-bonus.md)
-- Some other interesting features. Please contact TAs if you have any ideas
-- You can refer to [artworks in raytracer-2022](./doc/artworks-2022.md)
+#### Presentation (10 pts)
+- There will be at most 2 students to do presentations. They will get extra points based on their presentations, no more than 10 points.
 
-#### Task 5 (10 pts): Final scene
+#### Code review (10 pts)
 
-- Complete a final scene, which should be more complex than the scenes in the books. If your work looks pretty or has aesthetic value, you will get extra points
-- Or, your final scene can just be a banner or a logo of our project `Ray Tracing`. Look at the current banner at the top of this page, you can make a better one, with your own ray tracer
-
-#### Task 6 (10 pts): Code review
-
-### Basic Requirements
-- Pass the checks in `Github Actions`, including (already included in `run.yml`):
-    - `cargo fmt -- --check`
-    - `cargo clippy --all-targets --all-features -- -D warnings`
-    - `cargo test --all-features`
-    - `cargo build --release --all-features`
-    - `cargo run --release`
-
-You may run these commands locally to check your code before pushing it to GitHub.
-- Each image output commit should be tagged, if tagged, `run.yml` settings will run your code and generate the output images. You should **let us directly see the output images (a '.zip' file) in the `Github Actions` page**
+### Requirements
+#### Task 1 & Task 2
+- Each book's generated images should be provided. Each image output commit should be tagged, if tagged, `run.yml` settings will run your code and generate the output images. You should **let us directly see the output images (a '.zip' file) in the `Github Actions` page**.
+- Your code committed should pass the checks in `Github Actions`, including (already included in `run.yml`):
+  - `cargo fmt -- --check`
+  - `cargo clippy --all-targets --all-features -- -D warnings`
+  - `cargo test --all-features`
+  - `cargo build --release --all-features`
+  - `cargo run --release`
+- You may run these commands locally to check your code before pushing it to GitHub.
+#### Task 3
 - You should have a document recording all the bonus you have done briefly. For each bonus, you should show the code or a benchmark of your work.
 
-### Assignments
-
-- For students in ACM Class:
-  - You are supposed to finish all tasks above
-  - Recommended timeline:
-    - **Day 1:**  Task 0: Environment setup
-    - **Day 2 - 3:** Task 0: Learn Rust
-    - **Day 4 - 6:** Task 1
-    - **Day 7 - 9:** Task 2
-    - **Day 10 - 12:** Task 3
-    - **Day 13 - 19:** Task 4 & 5
-    - **Day 20:** Pre & Task 6
-
-- For students in SEIEE CS:
-  - You are supposed to finish `Task0`, `Task1 (40pts)`, `Task2 (40pts)`, `Task5 (10pts)` and `Task6 (10pts)`
-  - Recommended timeline:
-    - **Day 1:**  Task 0: Environment setup
-    - **Day 2 - 3:** Task 0: Learn Rust
-    - **Day 4 - 6:** Task 1 & 5
-    - **Day 7 - 9:** Task 2 & 5
-    - **Day 10:** Pre & Task 6
+### Timeline
+- Recommended schedule:
+  - **Day 1 - 2:**  Task 0: Environment setup & Learn Rust
+  - **Day 3 - 5:** Task 1
+  - **Day 6 - 8:** Task 2
+  - **Day 9 - 19:** Task 3 & Final Scene
+  - **Day 20:** Presentation & Code Review
+- **Deadline: 2025-07-17 23:59:59**
 
 ### More Tips
 - You may run `cargo fmt` to format your code locally before pushing it to GitHub.
 - You may need to use `cargo run --release` to accelerate the precedure.
 - There is no restriction on unsafe code, if you think it is necessary, you can use it, and explain why you need it in code review.
-- There will be 2 students to do presentations for ACM Class and SEIEE CS. They will get extra points based on their presentations, no more than 10 points.

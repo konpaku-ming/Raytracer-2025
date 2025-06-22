@@ -1,5 +1,6 @@
 Reference to [Former Tutorial](https://github.com/aik2mlj/raytracer-tutorial)
-
+- Multi-threading to accelerate your ray tracer (strongly recommended)
+- Make a benchmark for your ray tracer
 ### Track 1: Reduce Contention 
 
 此项工作的前提条件是完成多线程渲染。
