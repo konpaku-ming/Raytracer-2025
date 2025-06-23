@@ -146,7 +146,7 @@ Just do some preparation work, including:
 - Your final scene can act as a banner or a logo of our project `Ray Tracing`. Look at the current banner at the top of this page, you can make a better one, with your own ray tracer.
 - Your final result should be a picture or video (if you implemented animation) in any format you like. Hand in the final result to TAs before the deadline.
 - You may contact TAs if you need calculation resources; but first try to optimize your code to run on your own computer.
-- You can refer to [artworks](./doc/artworks) from the previous years for some inspiration.
+- You can refer to [artworks](./doc/artworks.md) from the previous years for some inspiration.
 
 #### Presentation (10 pts)
 - There will be at most 2 students to do presentations. They will get extra points based on their presentations, no more than 10 points.
