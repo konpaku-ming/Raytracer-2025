@@ -144,6 +144,8 @@ Just do some preparation work, including:
 - Finally, you will need to create some kind of beautiful image with your ray tracer. Beauty is of course in the eye of the beholder, but generally we are looking for clear effort in the generation of one special "capstone" image for this assignment, beyond just basic debugging/confirming that the technical features work. Great artworks will get you extra points.
 - For this part you may use whatever resources you like, such as free COLLADA files from places like TurboSquid (or any other free online resource); you may also find it helpful to use free software like Blender to assemble a scene. 
 - Your final scene can act as a banner or a logo of our project `Ray Tracing`. Look at the current banner at the top of this page, you can make a better one, with your own ray tracer.
+- Your final result should be a picture or video (if you implemented animation) in any format you like. Hand in the final result to TAs before the deadline.
+- You may contact TAs if you need calculation resources; but first try to optimize your code to run on your own computer.
 - You can refer to [artworks](./doc/artworks) from the previous years for some inspiration.
 
 #### Presentation (10 pts)
