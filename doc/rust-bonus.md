@@ -1,12 +1,6 @@
 Reference to [Former Tutorial](https://github.com/aik2mlj/raytracer-tutorial)
 
-### Track 1: Reduce Contention 
-
-此项工作的前提条件是完成多线程渲染。
-
-在多线程环境中，`clone` / `drop Arc` 可能会导致性能下降。因此，我们要尽量减少 `Arc` 的使用。这项任务的目标是，仅在线程创建的时候 `clone Arc`。其他地方不出现 `Arc`，将 `Arc` 改为引用。
-
-### Track 2: Static Dispatch
+### Static Dispatch (5 pts)
 
 调用 `Box<dyn trait>` / `Arc<dyn trait>` / `&dyn trait` 中的函数时会产生额外的开销。我们可以通过泛型来解决这个问题。
 
@@ -15,7 +9,9 @@ Reference to [Former Tutorial](https://github.com/aik2mlj/raytracer-tutorial)
 仅在 `HitRecord`, `ScatterRecord` (这个在第三本书的剩余部分中出现), `HittableList` 和 `BVHNode` 中使用 `dyn`。
 如果感兴趣，可以探索如何使用 `macro_rules` 来减少几乎相同的代码写两遍的冗余。
 
-### Track 3: Code Generation 
+在第三本书的剩余部分，PDF 中需要处理的物体使用泛型完成，去除代码路径中的 `&dyn`。
+
+### Code Generation (5 pts)
 
 此项工作的前提条件是完成 `BVH`。
 
@@ -25,17 +21,8 @@ Reference to [Former Tutorial](https://github.com/aik2mlj/raytracer-tutorial)
 
 如果感兴趣，你也可以探索给过程宏传参的方法。e.g. 通过 `make_spheres_impl! { 100 }` 生成可以产生 100 个球的函数。
 
-### Track 4: PDF Static Dispatch
-
-此项工作的前提条件是完成第三本书的剩余部分。PDF 中需要处理的物体使用泛型完成，去除代码路径中的 `&dyn`。
-
-
-### Track 5: More Code Generation
+### More Code Generation (5 pts)
 
 在过程宏中，读取文件，直接从 `yaml` 或 `JSON` 文件（选择一种即可）生成场景对应的程序。
-
-在 data 文件夹中给出了一些例子。
-
-例子中 `BVHNode` 里的 `bounding_box` 是冗余数据。你可以不使用这个数据。
 
 读 `JSON` / `yaml` 可以调包。
