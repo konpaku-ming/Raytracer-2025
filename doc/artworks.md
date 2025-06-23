@@ -29,10 +29,6 @@ Reference to [raytracer-2022](https://github.com/ACMClassCourse-2021/PPCA-Raytra
 
 <img src="assets/image-20230629191346961.png" alt="image-20230629191346961" style="zoom:80%;" />
 
-### Normal mapping
-
-<img src="assets/SJTU_cubiod_scene.jpg" alt="SJTU" style="zoom:50%;" />
-
 ### interpolation
 
 Before interpolation

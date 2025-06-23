@@ -19,7 +19,7 @@ Currently, your ray tracer may only support simple materials like diffuse, metal
 Add support for environment lighting, which allows you to use an image as a light source. Refer to [this article](http://dalab.se.sjtu.edu.cn/gitlab/courses/scotty3d/-/blob/master/docs/pathtracer/environment_lighting.md) for details (**5 pts**). Importance sampling for environment lighting, i.e. PDF method, is also described in the article (**5 pts**).
 
 ### More Visual Effects (? pts)
-Use your creativity to add more visual effects to your ray tracer, regardless of whether they follow the laws of physics. Anyway, CG is to create the illusion of reality, so unrealistic while interesting effects are highly encouraged; realistic effects in optics, such as dispersion, diffraction, and polarization, are also welcome. Following are two of my works, with only a few lines of codes. Let your imagination run wild!
+Use your creativity to add more visual effects to your ray tracer, regardless of whether they follow the laws of physics. Anyway, CG is to create the illusion of reality, so unrealistic while interesting effects are highly encouraged; realistic effects in optics, such as dispersion, diffraction, and polarization, are also welcome. You can also write some post-processing effects, such as edge detection. Following are two of my works, with only a few lines of codes. See [artworks](artworks.md) and their advanced features for more inspiration. Let your imagination run wild!
 
 ![test1](./assets/test1.png)
 ![test2](./assets/test2.png)
