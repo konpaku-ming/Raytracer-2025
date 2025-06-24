@@ -3,6 +3,9 @@ name = "raytracer"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+path = "src/library.rs"
+
 [dependencies]
 image = "0.25.6"
 console = "0.15.11"
