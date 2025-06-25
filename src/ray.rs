@@ -31,7 +31,7 @@ impl Ray {
     }
 
     pub fn ray_color(&self) -> Color {
-        if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, &self) != -1.0 {
+        if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, self) != -1.0 {
             Color::new(1.0, 0.0, 0.0)
         } else {
             let a = 0.5 * (unit_vector(self.direction()).y() + 1.0);
