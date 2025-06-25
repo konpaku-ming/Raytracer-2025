@@ -1,3 +1,4 @@
+use crate::hitchecker::hit_sphere;
 use crate::vec3::Point3;
 use crate::vec3::Vec3;
 use crate::vec3::unit_vector;
@@ -30,7 +31,11 @@ impl Ray {
     }
 
     pub fn ray_color(&self) -> Color {
-        let a = 0.5 * (unit_vector(self.direction()).y() + 1.0);
-        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+        if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, self) != -1.0 {
+            Color::new(1.0, 0.0, 0.0)
+        } else {
+            let a = 0.5 * (unit_vector(self.direction()).y() + 1.0);
+            (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+        }
     }
 }
