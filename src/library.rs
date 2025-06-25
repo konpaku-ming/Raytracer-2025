@@ -1,4 +1,5 @@
 pub mod camera;
+pub mod hitchecker;
 pub mod ray;
 pub mod raytracer;
 pub mod sketchpad;
