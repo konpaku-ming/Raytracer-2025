@@ -1,8 +1,5 @@
-use crate::hitchecker::hit_sphere;
 use crate::vec3::Point3;
 use crate::vec3::Vec3;
-use crate::vec3::unit_vector;
-use crate::vec3color::Color;
 
 pub struct Ray {
     orig: Point3, //原点
@@ -28,16 +25,5 @@ impl Ray {
 
     pub fn at(&self, t: f64) -> Point3 {
         self.orig + (self.dir * t)
-    }
-
-    pub fn ray_color(&self) -> Color {
-        let t = hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, self);
-        if t > 0.0 {
-            let normal = unit_vector(&(self.at(t) - Vec3::new(0.0, 0.0, -1.0)));
-            0.5 * Color::new(normal.x() + 1.0, normal.y() + 1.0, normal.z() + 1.0)
-        } else {
-            let a = 0.5 * (unit_vector(self.direction()).y() + 1.0);
-            (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
-        }
     }
 }

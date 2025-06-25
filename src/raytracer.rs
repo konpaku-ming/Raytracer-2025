@@ -1,7 +1,9 @@
 use crate::camera::Camera;
+use crate::hit_checker::{HitRecord, Hittable, HittableList};
 use crate::ray::Ray;
 use crate::sketchpad::Sketchpad;
-use crate::vec3::{Point3, Vec3};
+use crate::vec3::{Point3, Vec3, unit_vector};
+use crate::vec3color::Color;
 
 pub struct RayTracer {
     sketchpad: Sketchpad,
@@ -13,10 +15,17 @@ pub struct RayTracer {
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
     pixel00_loc: Vec3,
+    hittable_list: HittableList,
 }
 
 impl RayTracer {
-    pub fn new(aspect_ratio: f64, width: u32, viewport_height: f64, focal_length: f64) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        width: u32,
+        viewport_height: f64,
+        focal_length: f64,
+        hittable_list: HittableList,
+    ) -> Self {
         let height = (width as f64 / aspect_ratio) as u32;
         let height = if height < 1 { 1 } else { height };
         let viewport_width = viewport_height * (width as f64 / height as f64);
@@ -41,6 +50,17 @@ impl RayTracer {
             pixel_delta_u,
             pixel_delta_v,
             pixel00_loc,
+            hittable_list,
+        }
+    }
+
+    pub fn ray_color(&self, ray: &Ray) -> Color {
+        let mut rec = HitRecord::default();
+        if self.hittable_list.hit(ray, 0.0, f64::INFINITY, &mut rec) {
+            0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0))
+        } else {
+            let a = 0.5 * (unit_vector(ray.direction()).y() + 1.0);
+            (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
         }
     }
 
@@ -52,7 +72,7 @@ impl RayTracer {
                     + ((j as f64) * self.pixel_delta_v);
                 let ray_direction = pixel_center - self.camera.center();
                 let r = Ray::new(self.camera.center(), ray_direction);
-                let pixel_color = r.ray_color();
+                let pixel_color = self.ray_color(&r);
                 self.sketchpad.draw(i, j, pixel_color);
             }
         }
