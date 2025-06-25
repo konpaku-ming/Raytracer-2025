@@ -1,14 +1,15 @@
 use crate::vec3color::Color;
 use console::style;
 use image::{ImageBuffer, RgbImage};
-use indicatif::ProgressBar;
 
 pub struct Sketchpad {
     image: RgbImage,
 }
 
 impl Sketchpad {
-    pub fn new(width: u32, height: u32) -> Self {
+    pub fn new(width: u32, aspect_ratio: f64) -> Self {
+        let height = (width as f64 / aspect_ratio) as u32;
+        let height = if height < 1 { 1 } else { height };
         Self {
             image: ImageBuffer::new(width, height),
         }
