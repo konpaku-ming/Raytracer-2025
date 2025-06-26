@@ -65,7 +65,8 @@ impl RayTracer {
             .hittable_list
             .hit(ray, Interval::new(0.0, f64::INFINITY), &mut rec)
         {
-            0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0))
+            let direction = Vec3::random_on_hemisphere(rec.normal);
+            0.5 * self.ray_color(&Ray::new(rec.pos, direction))
         } else {
             let a = 0.5 * (unit_vector(ray.direction()).y() + 1.0);
             (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)

@@ -1,3 +1,5 @@
+use crate::random::random_double;
+use crate::random::random_double_range;
 use std::fmt;
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign,
@@ -33,6 +35,41 @@ impl Vec3 {
     //返回向量的欧几里得长度
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
+    }
+
+    pub fn random() -> Vec3 {
+        Vec3 {
+            e: [random_double(), random_double(), random_double()],
+        }
+    }
+
+    pub fn random_range(min: f64, max: f64) -> Vec3 {
+        Vec3 {
+            e: [
+                random_double_range(min, max),
+                random_double_range(min, max),
+                random_double_range(min, max),
+            ],
+        }
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        loop {
+            let p = Vec3::random_range(-1.0, 1.0);
+            let len_sq = p.length_squared();
+            if len_sq > 1e-160 && len_sq <= 1.0 {
+                return unit_vector(&p);
+            }
+        }
+    }
+
+    pub fn random_on_hemisphere(normal: Vec3) -> Vec3 {
+        let on_unit_sphere = Vec3::random_unit_vector();
+        if dot(&on_unit_sphere, &normal) > 0.0 {
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
+        }
     }
 }
 
