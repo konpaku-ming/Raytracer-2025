@@ -1,4 +1,5 @@
 use crate::hit_checker::HitRecord;
+use crate::random::random_double;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use crate::vec3::dot;
@@ -90,6 +91,12 @@ impl Dielectric {
     }
 }
 
+fn reflectance(cosine: f64, refraction_index: f64) -> f64 {
+    let r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
+    let r0 = r0 * r0;
+    r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+}
+
 impl Material for Dielectric {
     fn scatter(
         &self,
@@ -108,7 +115,7 @@ impl Material for Dielectric {
         let cos_theta = dot(&-unit_direction, &rec.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
         let cannot_refract = ri * sin_theta > 1.0; //全反射
-        let direction = if cannot_refract {
+        let direction = if cannot_refract || reflectance(cos_theta, ri) > random_double() {
             Vec3::reflect(&unit_direction, &rec.normal)
         } else {
             Vec3::refract(&unit_direction, &rec.normal, ri)
