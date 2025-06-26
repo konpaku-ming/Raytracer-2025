@@ -17,7 +17,7 @@ impl Sketchpad {
 
     pub fn draw(&mut self, x: u32, y: u32, color: Color) {
         let pixel = self.image.get_pixel_mut(x, y);
-        *pixel = image::Rgb([color.r_byte(), color.g_byte(), color.b_byte()]);
+        *pixel = image::Rgb(Color::write_color(&color));
     }
 
     pub fn width(&self) -> u32 {
@@ -29,7 +29,7 @@ impl Sketchpad {
     }
 
     pub fn save(&self) {
-        let path = std::path::Path::new("output/book1/image5.png");
+        let path = std::path::Path::new("output/book1/image6.png");
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
         println!(
