@@ -1,6 +1,7 @@
 use crate::vec3::Point3;
 use crate::vec3::Vec3;
 
+#[derive(Default)]
 pub struct Ray {
     orig: Point3, //原点
     dir: Vec3,    //方向

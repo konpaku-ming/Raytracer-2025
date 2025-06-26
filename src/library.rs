@@ -7,3 +7,4 @@ pub mod raytracer;
 pub mod sketchpad;
 pub mod vec3;
 pub mod vec3color;
+pub mod material;

@@ -1,16 +1,31 @@
 use crate::interval::Interval;
+use crate::material::DummyMaterial;
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Point3;
 use crate::vec3::Vec3;
 use crate::vec3::dot;
 use std::rc::Rc;
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct HitRecord {
     pub pos: Point3,
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
+    pub mat: Rc<dyn Material>,
+}
+
+impl Default for HitRecord {
+    fn default() -> Self {
+        HitRecord {
+            pos: Point3::default(),
+            normal: Vec3::default(),
+            t: 0.0,
+            front_face: true,
+            mat: Rc::new(DummyMaterial {}),
+        }
+    }
 }
 
 impl HitRecord {
@@ -28,6 +43,7 @@ impl HitRecord {
             pos,
             normal,
             front_face,
+            mat: Rc::new(DummyMaterial {}),
         }
     }
 }
@@ -39,11 +55,16 @@ pub trait Hittable {
 pub struct Sphere {
     center: Point3,
     radius: f64,
+    mat: Rc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Self {
-        Self { center, radius }
+    pub fn new(center: Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
+        Self {
+            center,
+            radius,
+            mat,
+        }
     }
 }
 
@@ -75,6 +96,7 @@ impl Hittable for Sphere {
         } else {
             -outward_normal
         };
+        hit_record.mat = self.mat.clone();
         true
     }
 }
