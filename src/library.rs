@@ -1,10 +1,10 @@
 pub mod camera;
 pub mod hit_checker;
 pub mod interval;
+pub mod material;
 pub mod random;
 pub mod ray;
 pub mod raytracer;
 pub mod sketchpad;
 pub mod vec3;
 pub mod vec3color;
-pub mod material;
