@@ -6,6 +6,10 @@ use crate::sketchpad::Sketchpad;
 use crate::vec3::{Point3, Vec3, unit_vector};
 use crate::vec3color::Color;
 
+fn degrees_to_radians(degrees: f64) -> f64 {
+    degrees * std::f64::consts::PI / 180.0
+}
+
 pub struct RayTracer {
     sketchpad: Sketchpad,
     camera: Camera,
@@ -22,14 +26,18 @@ impl RayTracer {
     pub fn new(
         aspect_ratio: f64,
         width: u32,
-        viewport_height: f64,
+        //viewport_height: f64,
         focal_length: f64,
         hittable_list: HittableList,
         samples_per_pixel: i32,
         max_depth: i32,
+        v_fov: f64,
     ) -> Self {
         let height = (width as f64 / aspect_ratio) as u32;
         let height = if height < 1 { 1 } else { height };
+        let theta = degrees_to_radians(v_fov);
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (width as f64 / height as f64);
         let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
         let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
