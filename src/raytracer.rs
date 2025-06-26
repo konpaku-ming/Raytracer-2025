@@ -69,7 +69,7 @@ impl RayTracer {
         let mut rec = HitRecord::default();
         if self
             .hittable_list
-            .hit(ray, Interval::new(0.0, f64::INFINITY), &mut rec)
+            .hit(ray, Interval::new(0.001, f64::INFINITY), &mut rec)
         {
             let direction = Vec3::random_on_hemisphere(rec.normal);
             0.5 * self.ray_color(&Ray::new(rec.pos, direction), depth - 1)
