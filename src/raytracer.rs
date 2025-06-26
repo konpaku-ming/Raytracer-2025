@@ -62,7 +62,7 @@ impl RayTracer {
         }
     }
 
-    pub fn ray_color(&self, ray: &Ray, depth: i32) -> Color {
+    pub fn ray_color1(&self, ray: &Ray, depth: i32) -> Color {
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
@@ -72,7 +72,75 @@ impl RayTracer {
             .hit(ray, Interval::new(0.001, f64::INFINITY), &mut rec)
         {
             let direction = rec.normal + Vec3::random_unit_vector();
-            0.5 * self.ray_color(&Ray::new(rec.pos, direction), depth - 1)
+            0.1 * self.ray_color1(&Ray::new(rec.pos, direction), depth - 1)
+        } else {
+            let a = 0.5 * (unit_vector(ray.direction()).y() + 1.0);
+            (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+        }
+    }
+
+    pub fn ray_color2(&self, ray: &Ray, depth: i32) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+        let mut rec = HitRecord::default();
+        if self
+            .hittable_list
+            .hit(ray, Interval::new(0.001, f64::INFINITY), &mut rec)
+        {
+            let direction = rec.normal + Vec3::random_unit_vector();
+            0.3 * self.ray_color2(&Ray::new(rec.pos, direction), depth - 1)
+        } else {
+            let a = 0.5 * (unit_vector(ray.direction()).y() + 1.0);
+            (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+        }
+    }
+
+    pub fn ray_color3(&self, ray: &Ray, depth: i32) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+        let mut rec = HitRecord::default();
+        if self
+            .hittable_list
+            .hit(ray, Interval::new(0.001, f64::INFINITY), &mut rec)
+        {
+            let direction = rec.normal + Vec3::random_unit_vector();
+            0.5 * self.ray_color3(&Ray::new(rec.pos, direction), depth - 1)
+        } else {
+            let a = 0.5 * (unit_vector(ray.direction()).y() + 1.0);
+            (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+        }
+    }
+
+    pub fn ray_color4(&self, ray: &Ray, depth: i32) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+        let mut rec = HitRecord::default();
+        if self
+            .hittable_list
+            .hit(ray, Interval::new(0.001, f64::INFINITY), &mut rec)
+        {
+            let direction = rec.normal + Vec3::random_unit_vector();
+            0.7 * self.ray_color4(&Ray::new(rec.pos, direction), depth - 1)
+        } else {
+            let a = 0.5 * (unit_vector(ray.direction()).y() + 1.0);
+            (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+        }
+    }
+
+    pub fn ray_color5(&self, ray: &Ray, depth: i32) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+        let mut rec = HitRecord::default();
+        if self
+            .hittable_list
+            .hit(ray, Interval::new(0.001, f64::INFINITY), &mut rec)
+        {
+            let direction = rec.normal + Vec3::random_unit_vector();
+            0.9 * self.ray_color5(&Ray::new(rec.pos, direction), depth - 1)
         } else {
             let a = 0.5 * (unit_vector(ray.direction()).y() + 1.0);
             (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
@@ -81,11 +149,47 @@ impl RayTracer {
 
     pub fn render(&mut self) {
         for j in 0..self.height {
-            for i in 0..self.width {
+            for i in 0..self.width / 5 {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 let ray_samples = self.camera.get_ray_samples(i, j);
                 for r in ray_samples {
-                    pixel_color += self.ray_color(&r, self.max_depth);
+                    pixel_color += self.ray_color1(&r, self.max_depth);
+                }
+                self.sketchpad
+                    .draw(i, j, pixel_color * self.pixel_samples_scale);
+            }
+            for i in self.width / 5..2 * self.width / 5 {
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                let ray_samples = self.camera.get_ray_samples(i, j);
+                for r in ray_samples {
+                    pixel_color += self.ray_color2(&r, self.max_depth);
+                }
+                self.sketchpad
+                    .draw(i, j, pixel_color * self.pixel_samples_scale);
+            }
+            for i in 2 * self.width / 5..3 * self.width / 5 {
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                let ray_samples = self.camera.get_ray_samples(i, j);
+                for r in ray_samples {
+                    pixel_color += self.ray_color3(&r, self.max_depth);
+                }
+                self.sketchpad
+                    .draw(i, j, pixel_color * self.pixel_samples_scale);
+            }
+            for i in 3 * self.width / 5..4 * self.width / 5 {
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                let ray_samples = self.camera.get_ray_samples(i, j);
+                for r in ray_samples {
+                    pixel_color += self.ray_color4(&r, self.max_depth);
+                }
+                self.sketchpad
+                    .draw(i, j, pixel_color * self.pixel_samples_scale);
+            }
+            for i in 4 * self.width / 5..5 * self.width / 5 {
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                let ray_samples = self.camera.get_ray_samples(i, j);
+                for r in ray_samples {
+                    pixel_color += self.ray_color5(&r, self.max_depth);
                 }
                 self.sketchpad
                     .draw(i, j, pixel_color * self.pixel_samples_scale);
