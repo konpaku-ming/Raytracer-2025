@@ -8,6 +8,9 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     pixel00_loc: Vec3,
     samples_per_pixel: i32,
+    defocus_angle: f64,
+    defocus_disk_u: Vec3,
+    defocus_disk_v: Vec3,
 }
 
 impl Camera {
@@ -17,6 +20,7 @@ impl Camera {
         pixel_delta_v: Vec3,
         pixel00_loc: Vec3,
         samples_per_pixel: i32,
+        (defocus_angle, defocus_disk_u, defocus_disk_v): (f64, Vec3, Vec3),
     ) -> Self {
         Self {
             ctr: center,
@@ -24,6 +28,9 @@ impl Camera {
             pixel_delta_v,
             pixel00_loc,
             samples_per_pixel,
+            defocus_angle,
+            defocus_disk_u,
+            defocus_disk_v,
         }
     }
 
@@ -40,8 +47,12 @@ impl Camera {
         let pixel_sample = self.pixel00_loc
             + ((i as f64 + offset.x()) * self.pixel_delta_u)
             + ((j as f64 + offset.y()) * self.pixel_delta_v);
-        let ray_direction = pixel_sample - self.center();
-        let ray_origin = self.center();
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.center()
+        } else {
+            self.defocus_disk_sample()
+        };
+        let ray_direction = pixel_sample - ray_origin;
         Ray::new(ray_origin, ray_direction)
     }
 
@@ -52,5 +63,10 @@ impl Camera {
             ray_samples.push(ray);
         }
         ray_samples
+    }
+
+    pub fn defocus_disk_sample(&self) -> Point3 {
+        let p = Vec3::random_in_unit_disk();
+        self.center() + (p[0] * self.defocus_disk_u) + (p[1] * self.defocus_disk_v)
     }
 }
