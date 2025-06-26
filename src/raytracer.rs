@@ -73,10 +73,7 @@ impl RayTracer {
         {
             let mut scattered = Ray::default();
             let mut attenuation = Color::default();
-            if rec
-                .mat
-                .scatter(ray, &rec, &mut attenuation, &mut scattered)
-            {
+            if rec.mat.scatter(ray, &rec, &mut attenuation, &mut scattered) {
                 return attenuation * self.ray_color(&scattered, depth - 1);
             }
         }
