@@ -46,9 +46,9 @@ impl Camera {
     }
 
     pub fn get_ray_samples(&self, i: u32, j: u32) -> Vec<Ray> {
-        let mut  ray_samples= Vec::new();
+        let mut ray_samples = Vec::new();
         for _sample in 0..self.samples_per_pixel {
-            let ray=self.get_ray(i,j);
+            let ray = self.get_ray(i, j);
             ray_samples.push(ray);
         }
         ray_samples
