@@ -5,6 +5,7 @@ use crate::ray::Ray;
 use crate::sketchpad::Sketchpad;
 use crate::vec3::{Point3, Vec3, cross, unit_vector};
 use crate::vec3color::Color;
+use indicatif::ProgressBar;
 
 fn degrees_to_radians(degrees: f64) -> f64 {
     degrees * std::f64::consts::PI / 180.0
@@ -13,7 +14,6 @@ fn degrees_to_radians(degrees: f64) -> f64 {
 pub struct RayTracer {
     sketchpad: Sketchpad,
     camera: Camera,
-    //aspect_ratio: f64,
     width: u32,
     height: u32,
     hittable_list: HittableList,
@@ -69,7 +69,6 @@ impl RayTracer {
         Self {
             sketchpad,
             camera,
-            //aspect_ratio,
             width,
             height,
             hittable_list,
@@ -100,6 +99,12 @@ impl RayTracer {
     }
 
     pub fn render(&mut self) {
+        let progress = if option_env!("CI").unwrap_or_default() == "true" {
+            ProgressBar::hidden()
+        } else {
+            ProgressBar::new(self.height as u64)
+        };
+
         for j in 0..self.height {
             for i in 0..self.width {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
@@ -110,7 +115,9 @@ impl RayTracer {
                 self.sketchpad
                     .draw(i, j, pixel_color * self.pixel_samples_scale);
             }
+            progress.inc(1);
         }
+        progress.finish();
         self.sketchpad.save();
     }
 }
