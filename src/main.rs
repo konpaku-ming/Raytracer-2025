@@ -15,7 +15,7 @@ fn main() {
     //let focal_length = 1.0;
     let samples_per_pixel = 100;
     let max_depth = 50;
-    let v_fov = 90.0;
+    let v_fov = 20.0;
     let look_from = Point3::new(-2.0, 2.0, 1.0);
     let look_at = Point3::new(0.0, 0.0, -1.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
