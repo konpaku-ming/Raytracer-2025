@@ -80,6 +80,13 @@ impl Vec3 {
     pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
         *v - 2.0 * dot(v, n) * (*n)
     }
+
+    pub fn refract(uv: &Vec3, n: &Vec3, eta_rate: f64) -> Vec3 {
+        let cos_theta = dot(&-*uv, n).min(1.0);
+        let r_out_perp = eta_rate * (*uv + cos_theta * (*n));
+        let r_out_parallel = -*n * (1.0 - r_out_perp.length_squared()).abs().sqrt();
+        r_out_perp + r_out_parallel
+    }
 }
 
 //索引借用分量
