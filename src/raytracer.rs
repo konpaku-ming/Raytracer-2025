@@ -23,38 +23,46 @@ pub struct RayTracer {
 
 impl RayTracer {
     pub fn new(
-        aspect_ratio: f64,
-        width: u32,
+        (aspect_ratio, width): (f64, u32),
         (look_from, look_at, vup): (Point3, Point3, Vec3),
         hittable_list: HittableList,
         samples_per_pixel: i32,
         max_depth: i32,
         v_fov: f64,
+        (defocus_angle, focus_dist): (f64, f64),
     ) -> Self {
         let height = (width as f64 / aspect_ratio) as u32;
         let height = if height < 1 { 1 } else { height };
         let theta = degrees_to_radians(v_fov);
         let h = (theta / 2.0).tan();
-        let focal_length = (look_from - look_at).length();
+
         let w = unit_vector(&(look_from - look_at));
         let u = unit_vector(&cross(&vup, &w));
         let v = cross(&w, &u);
-        let viewport_height = 2.0 * h * focal_length;
+
+        let viewport_height = 2.0 * h * focus_dist;
         let viewport_width = viewport_height * (width as f64 / height as f64);
         let viewport_u = viewport_width * u;
         let viewport_v = viewport_height * -v;
         let center = look_from;
-        let viewport_upper_left = center - focal_length * w - viewport_u / 2.0 - viewport_v / 2.0;
+        let viewport_upper_left = center - focus_dist * w - viewport_u / 2.0 - viewport_v / 2.0;
+
         let pixel_delta_u = viewport_u / width as f64;
         let pixel_delta_v = viewport_v / height as f64;
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
         let pixel_samples_scale = 1.0 / samples_per_pixel as f64;
+
+        let defocus_radius = focus_dist * degrees_to_radians(defocus_angle / 2.0).tan();
+        let defocus_disk_u = u * defocus_radius;
+        let defocus_disk_v = v * defocus_radius;
+
         let camera = Camera::new(
             center,
             pixel_delta_u,
             pixel_delta_v,
             pixel00_loc,
             samples_per_pixel,
+            (defocus_angle, defocus_disk_u, defocus_disk_v),
         );
         let sketchpad = Sketchpad::new(width, aspect_ratio);
 

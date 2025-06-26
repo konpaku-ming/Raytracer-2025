@@ -19,6 +19,8 @@ fn main() {
     let look_from = Point3::new(-2.0, 2.0, 1.0);
     let look_at = Point3::new(0.0, 0.0, -1.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle = 10.0;
+    let focus_dist = 3.4;
     let mut hittable_list = HittableList::default();
 
     let material_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
@@ -58,15 +60,13 @@ fn main() {
     )));
 
     let mut raytracer = RayTracer::new(
-        aspect_ratio,
-        image_width,
-        //viewport_height,
-        //focal_length,
+        (aspect_ratio, image_width),
         (look_from, look_at, vup),
         hittable_list,
         samples_per_pixel,
         max_depth,
         v_fov,
+        (defocus_angle, focus_dist),
     );
     raytracer.render();
 }
