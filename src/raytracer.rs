@@ -15,6 +15,7 @@ pub struct RayTracer {
     //focal_length: f64,
     hittable_list: HittableList,
     pixel_samples_scale: f64,
+    max_depth: i32,
 }
 
 impl RayTracer {
@@ -25,6 +26,7 @@ impl RayTracer {
         focal_length: f64,
         hittable_list: HittableList,
         samples_per_pixel: i32,
+        max_depth: i32,
     ) -> Self {
         let height = (width as f64 / aspect_ratio) as u32;
         let height = if height < 1 { 1 } else { height };
@@ -56,17 +58,21 @@ impl RayTracer {
             //focal_length,
             hittable_list,
             pixel_samples_scale,
+            max_depth,
         }
     }
 
-    pub fn ray_color(&self, ray: &Ray) -> Color {
+    pub fn ray_color(&self, ray: &Ray, depth: i32) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
         let mut rec = HitRecord::default();
         if self
             .hittable_list
             .hit(ray, Interval::new(0.0, f64::INFINITY), &mut rec)
         {
             let direction = Vec3::random_on_hemisphere(rec.normal);
-            0.5 * self.ray_color(&Ray::new(rec.pos, direction))
+            0.5 * self.ray_color(&Ray::new(rec.pos, direction), depth - 1)
         } else {
             let a = 0.5 * (unit_vector(ray.direction()).y() + 1.0);
             (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
@@ -79,7 +85,7 @@ impl RayTracer {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 let ray_samples = self.camera.get_ray_samples(i, j);
                 for r in ray_samples {
-                    pixel_color += self.ray_color(&r);
+                    pixel_color += self.ray_color(&r, self.max_depth);
                 }
                 self.sketchpad
                     .draw(i, j, pixel_color * self.pixel_samples_scale);
