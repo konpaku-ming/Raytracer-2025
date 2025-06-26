@@ -3,7 +3,7 @@ use crate::hit_checker::{HitRecord, Hittable, HittableList};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::sketchpad::Sketchpad;
-use crate::vec3::{Point3, Vec3, unit_vector};
+use crate::vec3::{Point3, Vec3, cross, unit_vector};
 use crate::vec3color::Color;
 
 fn degrees_to_radians(degrees: f64) -> f64 {
@@ -27,7 +27,10 @@ impl RayTracer {
         aspect_ratio: f64,
         width: u32,
         //viewport_height: f64,
-        focal_length: f64,
+        //focal_length: f64,
+        look_from: Point3,
+        look_at: Point3,
+        vup: Vec3,
         hittable_list: HittableList,
         samples_per_pixel: i32,
         max_depth: i32,
@@ -37,13 +40,16 @@ impl RayTracer {
         let height = if height < 1 { 1 } else { height };
         let theta = degrees_to_radians(v_fov);
         let h = (theta / 2.0).tan();
+        let focal_length = (look_from - look_at).length();
+        let w = unit_vector(&(look_from - look_at));
+        let u = unit_vector(&cross(&vup, &w));
+        let v = cross(&w, &u);
         let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (width as f64 / height as f64);
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
-        let center = Point3::new(0.0, 0.0, 0.0);
-        let viewport_upper_left =
-            center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+        let viewport_u = viewport_width * u;
+        let viewport_v = viewport_height * -v;
+        let center = look_from;
+        let viewport_upper_left = center - focal_length * w - viewport_u / 2.0 - viewport_v / 2.0;
         let pixel_delta_u = viewport_u / width as f64;
         let pixel_delta_v = viewport_v / height as f64;
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
