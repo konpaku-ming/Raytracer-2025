@@ -9,6 +9,56 @@ use raytracer::vec3color::Color;
 use std::rc::Rc;
 
 fn main() {
+    let mode = 1;
+    match mode {
+        1 => checkered_spheres(),
+        _ => bouncing_speres(),
+    }
+}
+
+fn checkered_spheres() {
+    let aspect_ratio = 16.0 / 9.0;
+    let image_width = 400;
+    let samples_per_pixel = 100;
+    let max_depth = 50;
+    let v_fov = 20.0;
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle = 0.0;
+    let focus_dist = 10.0;
+    let mut hittable_list = HittableList::default();
+    let checker = Rc::new(CheckerTexture::from_colors(
+        0.32,
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+    hittable_list.add(Rc::new(Sphere::new(
+        Point3::new(0.0, -10.0, 0.0),
+        10.0,
+        Rc::new(Lambertian::from_tex(checker.clone())),
+    )));
+    hittable_list.add(Rc::new(Sphere::new(
+        Point3::new(0.0, 10.0, 0.0),
+        10.0,
+        Rc::new(Lambertian::from_tex(checker.clone())),
+    )));
+    let bvh = BvhNode::from_list(&mut hittable_list);
+    let mut world = HittableList::default();
+    world.add(Rc::new(bvh));
+    let mut raytracer = RayTracer::new(
+        (aspect_ratio, image_width),
+        (look_from, look_at, vup),
+        world,
+        samples_per_pixel,
+        max_depth,
+        v_fov,
+        (defocus_angle, focus_dist),
+    );
+    raytracer.render();
+}
+
+fn bouncing_speres() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let samples_per_pixel = 100;
