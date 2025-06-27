@@ -2,7 +2,6 @@ use raytracer::hit_checker::HittableList;
 use raytracer::hit_checker::Sphere;
 use raytracer::material::Dielectric;
 use raytracer::material::Lambertian;
-use raytracer::material::Material;
 use raytracer::material::Metal;
 use raytracer::random::{random_double, random_double_range};
 use raytracer::raytracer::RayTracer;
@@ -12,8 +11,8 @@ use std::rc::Rc;
 
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
-    let image_width = 1200;
-    let samples_per_pixel = 500;
+    let image_width = 400;
+    let samples_per_pixel = 100;
     let max_depth = 50;
     let v_fov = 20.0;
     let look_from = Point3::new(13.0, 2.0, 3.0);
@@ -40,17 +39,25 @@ fn main() {
             );
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                let sphere_material: Rc<dyn Material> = if choose_mat < 0.8 {
+                if choose_mat < 0.8 {
                     let albedo = Color::random() * Color::random();
-                    Rc::new(Lambertian::new(albedo))
+                    let center2 = center + Vec3::new(0.0, random_double_range(0.0, 0.5), 0.0);
+                    let sphere_material = Rc::new(Lambertian::new(albedo));
+                    hittable_list.add(Rc::new(Sphere::new_moving(
+                        center,
+                        center2,
+                        0.2,
+                        sphere_material,
+                    )));
                 } else if choose_mat < 0.95 {
                     let albedo = Color::random_range(0.5, 1.0);
                     let fuzz = random_double_range(0.0, 0.5);
-                    Rc::new(Metal::new(albedo, fuzz))
+                    let sphere_material = Rc::new(Metal::new(albedo, fuzz));
+                    hittable_list.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
                 } else {
-                    Rc::new(Dielectric::new(1.5))
+                    let sphere_material = Rc::new(Dielectric::new(1.5));
+                    hittable_list.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
                 };
-                hittable_list.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
             }
         }
     }
