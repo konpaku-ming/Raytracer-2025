@@ -9,7 +9,7 @@ use raytracer::vec3color::Color;
 use std::rc::Rc;
 
 fn main() {
-    let mode = 2;
+    let mode = 1;
     match mode {
         1 => checkered_spheres(),
         _ => bouncing_speres(),
