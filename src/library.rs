@@ -4,6 +4,7 @@ pub mod camera;
 pub mod hit_checker;
 pub mod interval;
 pub mod material;
+pub mod my_image;
 pub mod random;
 pub mod ray;
 pub mod raytracer;
