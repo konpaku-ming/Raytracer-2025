@@ -53,7 +53,8 @@ impl Camera {
             self.defocus_disk_sample()
         };
         let ray_direction = pixel_sample - ray_origin;
-        Ray::new(ray_origin, ray_direction)
+        let ray_time = random_double();
+        Ray::new_with_time(ray_origin, ray_direction, ray_time)
     }
 
     pub fn get_ray_samples(&self, i: u32, j: u32) -> Vec<Ray> {
