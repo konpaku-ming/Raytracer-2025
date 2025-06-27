@@ -1,3 +1,4 @@
+use raytracer::bvh::BvhNode;
 use raytracer::hit_checker::HittableList;
 use raytracer::hit_checker::Sphere;
 use raytracer::material::Dielectric;
@@ -7,7 +8,7 @@ use raytracer::random::{random_double, random_double_range};
 use raytracer::raytracer::RayTracer;
 use raytracer::vec3::{Point3, Vec3};
 use raytracer::vec3color::Color;
-use std::rc::Rc;
+use std::sync::Arc;
 
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
@@ -22,8 +23,8 @@ fn main() {
     let focus_dist = 10.0;
     let mut hittable_list = HittableList::default();
 
-    let ground_material = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    hittable_list.add(Rc::new(Sphere::new(
+    let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    hittable_list.add(Arc::new(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
         ground_material,
@@ -42,8 +43,8 @@ fn main() {
                 if choose_mat < 0.8 {
                     let albedo = Color::random() * Color::random();
                     let center2 = center + Vec3::new(0.0, random_double_range(0.0, 0.5), 0.0);
-                    let sphere_material = Rc::new(Lambertian::new(albedo));
-                    hittable_list.add(Rc::new(Sphere::new_moving(
+                    let sphere_material = Arc::new(Lambertian::new(albedo));
+                    hittable_list.add(Arc::new(Sphere::new_moving(
                         center,
                         center2,
                         0.2,
@@ -52,41 +53,43 @@ fn main() {
                 } else if choose_mat < 0.95 {
                     let albedo = Color::random_range(0.5, 1.0);
                     let fuzz = random_double_range(0.0, 0.5);
-                    let sphere_material = Rc::new(Metal::new(albedo, fuzz));
-                    hittable_list.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
+                    let sphere_material = Arc::new(Metal::new(albedo, fuzz));
+                    hittable_list.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
                 } else {
-                    let sphere_material = Rc::new(Dielectric::new(1.5));
-                    hittable_list.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
+                    let sphere_material = Arc::new(Dielectric::new(1.5));
+                    hittable_list.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
                 };
             }
         }
     }
 
-    let material1 = Rc::new(Dielectric::new(1.5));
-    hittable_list.add(Rc::new(Sphere::new(
+    let material1 = Arc::new(Dielectric::new(1.5));
+    hittable_list.add(Arc::new(Sphere::new(
         Point3::new(0.0, 1.0, 0.0),
         1.0,
         material1,
     )));
 
-    let material2 = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
-    hittable_list.add(Rc::new(Sphere::new(
+    let material2 = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    hittable_list.add(Arc::new(Sphere::new(
         Point3::new(-4.0, 1.0, 0.0),
         1.0,
         material2,
     )));
 
-    let material3 = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
-    hittable_list.add(Rc::new(Sphere::new(
+    let material3 = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
+    hittable_list.add(Arc::new(Sphere::new(
         Point3::new(4.0, 1.0, 0.0),
         1.0,
         material3,
     )));
-
+    let bvh = BvhNode::from_list(&mut hittable_list);
+    let mut world = HittableList::default();
+    world.add(Arc::new(bvh));
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),
         (look_from, look_at, vup),
-        hittable_list,
+        world,
         samples_per_pixel,
         max_depth,
         v_fov,

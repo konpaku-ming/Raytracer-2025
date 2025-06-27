@@ -56,7 +56,7 @@ impl Aabb {
         }
     }
 
-    fn axis_interval(&self, axis: usize) -> &Interval {
+    pub fn axis_interval(&self, axis: usize) -> &Interval {
         match axis {
             1 => &self.y,
             2 => &self.z,
@@ -75,7 +75,7 @@ impl Aabb {
             let t0 = (ax.min - orig[axis]) * inv_d;
             let t1 = (ax.max - orig[axis]) * inv_d;
 
-            if t0 > t1 {
+            if t0 < t1 {
                 if t0 > ray_t.min {
                     ray_t.min = t0;
                 }
