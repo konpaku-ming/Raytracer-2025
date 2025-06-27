@@ -5,11 +5,11 @@ use crate::interval::Interval;
 use crate::random::random_int_range;
 use crate::ray::Ray;
 use std::cmp::Ordering;
-use std::sync::Arc;
+use std::rc::Rc;
 
 pub struct BvhNode {
-    left: Arc<dyn Hittable>,
-    right: Arc<dyn Hittable>,
+    left: Rc<dyn Hittable>,
+    right: Rc<dyn Hittable>,
     bbox: Aabb,
 }
 
@@ -19,9 +19,9 @@ impl BvhNode {
         BvhNode::from_range(&mut list.objects, 0, len)
     }
 
-    pub fn from_range(objects: &mut Vec<Arc<dyn Hittable>>, start: usize, end: usize) -> Self {
-        let left: Arc<dyn Hittable>;
-        let right: Arc<dyn Hittable>;
+    pub fn from_range(objects: &mut Vec<Rc<dyn Hittable>>, start: usize, end: usize) -> Self {
+        let left: Rc<dyn Hittable>;
+        let right: Rc<dyn Hittable>;
 
         let axis = random_int_range(0, 2);
 
@@ -40,8 +40,8 @@ impl BvhNode {
             _ => {
                 objects[start..end].sort_by(comparator);
                 let mid = start + object_span / 2;
-                left = Arc::new(BvhNode::from_range(objects, start, mid));
-                right = Arc::new(BvhNode::from_range(objects, mid, end));
+                left = Rc::new(BvhNode::from_range(objects, start, mid));
+                right = Rc::new(BvhNode::from_range(objects, mid, end));
             }
         }
 
@@ -50,9 +50,7 @@ impl BvhNode {
         Self { left, right, bbox }
     }
 
-    fn box_compare(
-        axis_index: usize,
-    ) -> impl Fn(&Arc<dyn Hittable>, &Arc<dyn Hittable>) -> Ordering {
+    fn box_compare(axis_index: usize) -> impl Fn(&Rc<dyn Hittable>, &Rc<dyn Hittable>) -> Ordering {
         move |a, b| {
             let box1 = a.bounding_box();
             let box2 = b.bounding_box();

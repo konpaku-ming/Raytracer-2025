@@ -6,7 +6,7 @@ use crate::ray::Ray;
 use crate::vec3::Point3;
 use crate::vec3::Vec3;
 use crate::vec3::dot;
-use std::sync::Arc;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct HitRecord {
@@ -14,7 +14,7 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
-    pub mat: Arc<dyn Material>,
+    pub mat: Rc<dyn Material>,
 }
 
 impl Default for HitRecord {
@@ -24,7 +24,7 @@ impl Default for HitRecord {
             normal: Vec3::default(),
             t: 0.0,
             front_face: true,
-            mat: Arc::new(DummyMaterial {}),
+            mat: Rc::new(DummyMaterial {}),
         }
     }
 }
@@ -44,7 +44,7 @@ impl HitRecord {
             pos,
             normal,
             front_face,
-            mat: Arc::new(DummyMaterial {}),
+            mat: Rc::new(DummyMaterial {}),
         }
     }
 }
@@ -58,12 +58,12 @@ pub trait Hittable {
 pub struct Sphere {
     center: Ray,
     radius: f64,
-    mat: Arc<dyn Material>,
+    mat: Rc<dyn Material>,
     bbox: Aabb,
 }
 
 impl Sphere {
-    pub fn new(static_center: Point3, radius: f64, mat: Arc<dyn Material>) -> Self {
+    pub fn new(static_center: Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
         let r_vec = Vec3::new(radius, radius, radius);
         Self {
             center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
@@ -77,7 +77,7 @@ impl Sphere {
         center1: Point3,
         center2: Point3,
         radius: f64,
-        mat: Arc<dyn Material>,
+        mat: Rc<dyn Material>,
     ) -> Self {
         let center = Ray::new(center1, center2 - center1);
         let r_vec = Vec3::new(radius, radius, radius);
@@ -132,12 +132,12 @@ impl Hittable for Sphere {
 
 #[derive(Default)]
 pub struct HittableList {
-    pub objects: Vec<Arc<dyn Hittable>>,
+    pub objects: Vec<Rc<dyn Hittable>>,
     bbox: Aabb,
 }
 
 impl HittableList {
-    pub fn add(&mut self, object: Arc<dyn Hittable>) {
+    pub fn add(&mut self, object: Rc<dyn Hittable>) {
         self.objects.push(object.clone());
         self.bbox = Aabb::from_box(self.bbox, object.bounding_box());
     }
