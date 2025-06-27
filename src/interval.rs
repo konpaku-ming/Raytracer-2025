@@ -34,7 +34,7 @@ impl Interval {
     pub fn union(a: Interval, b: Interval) -> Interval {
         let min = a.min.min(b.min);
         let max = a.max.max(b.max);
-        Interval { min, max }
+        Interval::new(min, max)
     }
 
     pub fn expand(&self, delta: f64) -> Interval {
