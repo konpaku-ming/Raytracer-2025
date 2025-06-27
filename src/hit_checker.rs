@@ -96,6 +96,14 @@ impl Sphere {
             bbox: Aabb::from_box(box1, box2),
         }
     }
+
+    pub fn get_sphere_uv(p: &Vec3) -> (f64, f64) {
+        let theta = (-p.y()).acos();
+        let phi = (-p.z()).atan2(p.x()) + std::f64::consts::PI;
+        let u = phi / (2.0 * std::f64::consts::PI);
+        let v = theta / std::f64::consts::PI;
+        (u, v)
+    }
 }
 
 impl Hittable for Sphere {
@@ -127,6 +135,7 @@ impl Hittable for Sphere {
         } else {
             -outward_normal
         };
+        (hit_record.u, hit_record.v) = Sphere::get_sphere_uv(&outward_normal);
         hit_record.mat = self.mat.clone();
         true
     }

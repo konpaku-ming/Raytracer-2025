@@ -1,3 +1,5 @@
+use crate::interval::Interval;
+use crate::my_image::MyImage;
 use crate::vec3::Point3;
 use crate::vec3color::Color;
 use std::rc::Rc;
@@ -60,5 +62,40 @@ impl Texture for CheckerTexture {
         } else {
             self.odd.value(u, v, p)
         }
+    }
+}
+
+pub struct ImageTexture {
+    image: MyImage,
+}
+
+impl ImageTexture {
+    pub fn new(filename: &str) -> Self {
+        Self {
+            image: MyImage::new(filename),
+        }
+    }
+}
+
+impl Texture for ImageTexture {
+    fn value(&self, u: f64, v: f64, _p: &Point3) -> Color {
+        if self.image.height() <= 0 {
+            return Color::new(0.0, 1.0, 1.0);
+        }
+
+        let u = Interval::new(0.0, 1.0).clamp(u);
+        let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
+
+        let i = (u * self.image.width() as f64) as usize;
+        let j = (v * self.image.height() as f64) as usize;
+
+        let pixel = self.image.pixel_data(i, j);
+        let color_scale = 1.0 / 255.0;
+
+        Color::new(
+            (color_scale * pixel[0] as f64) * (color_scale * pixel[0] as f64),
+            (color_scale * pixel[1] as f64) * (color_scale * pixel[1] as f64),
+            (color_scale * pixel[2] as f64) * (color_scale * pixel[2] as f64),
+        )
     }
 }
