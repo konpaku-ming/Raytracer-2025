@@ -1,3 +1,4 @@
+use crate::aabb::Aabb;
 use crate::interval::Interval;
 use crate::material::DummyMaterial;
 use crate::material::Material;
@@ -50,20 +51,25 @@ impl HitRecord {
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, interval: Interval, hit_record: &mut HitRecord) -> bool;
+
+    fn bounding_box(&self) -> Aabb;
 }
 
 pub struct Sphere {
     center: Ray,
     radius: f64,
     mat: Rc<dyn Material>,
+    bbox: Aabb,
 }
 
 impl Sphere {
     pub fn new(static_center: Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
+        let r_vec = Vec3::new(radius, radius, radius);
         Self {
             center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
             radius: radius.max(0.0),
             mat,
+            bbox: Aabb::from_points(static_center - r_vec, static_center + r_vec),
         }
     }
 
@@ -73,10 +79,15 @@ impl Sphere {
         radius: f64,
         mat: Rc<dyn Material>,
     ) -> Self {
+        let center = Ray::new(center1, center2 - center1);
+        let r_vec = Vec3::new(radius, radius, radius);
+        let box1 = Aabb::from_points(center.at(0.0) - r_vec, center.at(0.0) + r_vec);
+        let box2 = Aabb::from_points(center.at(1.0) - r_vec, center.at(1.0) + r_vec);
         Self {
-            center: Ray::new(center1, center2 - center1),
+            center,
             radius: radius.max(0.0),
             mat,
+            bbox: Aabb::from_box(box1, box2),
         }
     }
 }
@@ -113,16 +124,22 @@ impl Hittable for Sphere {
         hit_record.mat = self.mat.clone();
         true
     }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox
+    }
 }
 
 #[derive(Default)]
 pub struct HittableList {
     objects: Vec<Rc<dyn Hittable>>,
+    bbox: Aabb,
 }
 
 impl HittableList {
     pub fn add(&mut self, object: Rc<dyn Hittable>) {
-        self.objects.push(object);
+        self.objects.push(object.clone());
+        self.bbox = Aabb::from_box(self.bbox, object.bounding_box());
     }
 }
 
@@ -144,5 +161,9 @@ impl Hittable for HittableList {
             }
         }
         hit_anything
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox
     }
 }

@@ -31,6 +31,17 @@ impl Interval {
         x
     }
 
+    pub fn union(a: Interval, b: Interval) -> Interval {
+        let min = a.min.min(b.min);
+        let max = a.max.max(b.max);
+        Interval { min, max }
+    }
+
+    pub fn expand(&self, delta: f64) -> Interval {
+        let padding = delta / 2.0;
+        Interval::new(self.min - padding, self.max + padding)
+    }
+
     pub const EMPTY: Self = Self {
         min: f64::INFINITY,
         max: f64::NEG_INFINITY,
