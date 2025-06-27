@@ -23,9 +23,11 @@ impl BvhNode {
         let right: Rc<dyn Hittable>;
 
         let mut bbox = Aabb::EMPTY;
-        for object_index in start..end {
-            bbox = Aabb::from_box(bbox, objects[object_index].bounding_box());
+
+        for obj in objects.iter().take(end).skip(start) {
+            bbox = Aabb::from_box(bbox, obj.bounding_box());
         }
+
         let axis = bbox.longest_axis();
 
         let comparator = BvhNode::box_compare(axis);
