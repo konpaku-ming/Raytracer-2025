@@ -1,11 +1,9 @@
 use raytracer::bvh::BvhNode;
-use raytracer::hit_checker::HittableList;
-use raytracer::hit_checker::Sphere;
-use raytracer::material::Dielectric;
-use raytracer::material::Lambertian;
-use raytracer::material::Metal;
+use raytracer::hit_checker::{HittableList, Sphere};
+use raytracer::material::{Dielectric, Lambertian, Metal};
 use raytracer::random::{random_double, random_double_range};
 use raytracer::raytracer::RayTracer;
+use raytracer::texture::CheckerTexture;
 use raytracer::vec3::{Point3, Vec3};
 use raytracer::vec3color::Color;
 use std::rc::Rc;
@@ -23,11 +21,15 @@ fn main() {
     let focus_dist = 10.0;
     let mut hittable_list = HittableList::default();
 
-    let ground_material = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let checker = Rc::new(CheckerTexture::from_colors(
+        0.32,
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
     hittable_list.add(Rc::new(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
-        ground_material,
+        Rc::new(Lambertian::from_tex(checker)),
     )));
 
     for a in -11..11 {

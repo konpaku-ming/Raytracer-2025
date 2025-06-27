@@ -15,6 +15,8 @@ pub struct HitRecord {
     pub t: f64,
     pub front_face: bool,
     pub mat: Rc<dyn Material>,
+    pub u: f64,
+    pub v: f64,
 }
 
 impl Default for HitRecord {
@@ -25,6 +27,8 @@ impl Default for HitRecord {
             t: 0.0,
             front_face: true,
             mat: Rc::new(DummyMaterial {}),
+            u: 0.0,
+            v: 0.0,
         }
     }
 }
@@ -45,6 +49,8 @@ impl HitRecord {
             normal,
             front_face,
             mat: Rc::new(DummyMaterial {}),
+            u: 0.0,
+            v: 0.0,
         }
     }
 }
