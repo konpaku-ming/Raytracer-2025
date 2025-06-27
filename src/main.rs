@@ -12,8 +12,8 @@ use std::rc::Rc;
 
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
-    let image_width = 1200;
-    let samples_per_pixel = 500;
+    let image_width = 400;
+    let samples_per_pixel = 100;
     let max_depth = 50;
     let v_fov = 20.0;
     let look_from = Point3::new(13.0, 2.0, 3.0);

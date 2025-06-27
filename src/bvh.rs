@@ -2,7 +2,6 @@ use crate::aabb::Aabb;
 use crate::hit_checker::Hittable;
 use crate::hit_checker::{HitRecord, HittableList};
 use crate::interval::Interval;
-use crate::random::random_int_range;
 use crate::ray::Ray;
 use std::cmp::Ordering;
 use std::rc::Rc;
@@ -23,9 +22,13 @@ impl BvhNode {
         let left: Rc<dyn Hittable>;
         let right: Rc<dyn Hittable>;
 
-        let axis = random_int_range(0, 2);
+        let mut bbox = Aabb::EMPTY;
+        for object_index in start..end {
+            bbox = Aabb::from_box(bbox, objects[object_index].bounding_box());
+        }
+        let axis = bbox.longest_axis();
 
-        let comparator = BvhNode::box_compare(axis as usize);
+        let comparator = BvhNode::box_compare(axis);
 
         let object_span = end - start;
         match object_span {
@@ -44,8 +47,6 @@ impl BvhNode {
                 right = Rc::new(BvhNode::from_range(objects, mid, end));
             }
         }
-
-        let bbox = Aabb::from_box(left.bounding_box(), right.bounding_box());
 
         Self { left, right, bbox }
     }
