@@ -1,11 +1,8 @@
 use crate::aabb::Aabb;
 use crate::interval::Interval;
-use crate::material::DummyMaterial;
-use crate::material::Material;
+use crate::material::{DummyMaterial, Material};
 use crate::ray::Ray;
-use crate::vec3::Point3;
-use crate::vec3::Vec3;
-use crate::vec3::dot;
+use crate::vec3::{Point3, Vec3, dot};
 use std::rc::Rc;
 
 #[derive(Clone)]
