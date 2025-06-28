@@ -119,3 +119,9 @@ impl Texture for NoiseTexture {
         Color::new(noise_float, noise_float, noise_float)
     }
 }
+
+impl Default for NoiseTexture {
+    fn default() -> Self {
+        Self::new()
+    }
+}
