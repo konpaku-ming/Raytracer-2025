@@ -3,18 +3,60 @@ use raytracer::hit_checker::{HittableList, Sphere};
 use raytracer::material::{Dielectric, Lambertian, Metal};
 use raytracer::random::{random_double, random_double_range};
 use raytracer::raytracer::RayTracer;
-use raytracer::texture::{CheckerTexture, ImageTexture};
+use raytracer::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 use raytracer::vec3::{Point3, Vec3};
 use raytracer::vec3color::Color;
 use std::rc::Rc;
 
 fn main() {
-    let mode = 2;
+    let mode = 3;
     match mode {
         1 => checkered_spheres(),
         2 => earth(),
+        3 => perlin_spheres(),
         _ => bouncing_speres(),
     }
+}
+
+fn perlin_spheres() {
+    let aspect_ratio = 16.0 / 9.0;
+    let image_width = 400;
+    let samples_per_pixel = 100;
+    let max_depth = 50;
+    let v_fov = 20.0;
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle = 0.0;
+    let focus_dist = 10.0;
+
+    let mut world = HittableList::default();
+
+    let perlin_texture = Rc::new(NoiseTexture::new());
+    let perlin_surface = Rc::new(Lambertian::from_tex(perlin_texture));
+    let globe = Rc::new(Sphere::new(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        perlin_surface.clone(),
+    ));
+    let ground = Rc::new(Sphere::new(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        perlin_surface.clone(),
+    ));
+    world.add(globe);
+    world.add(ground);
+
+    let mut raytracer = RayTracer::new(
+        (aspect_ratio, image_width),
+        (look_from, look_at, vup),
+        world,
+        samples_per_pixel,
+        max_depth,
+        v_fov,
+        (defocus_angle, focus_dist),
+    );
+    raytracer.render();
 }
 
 fn earth() {
