@@ -127,8 +127,8 @@ impl Hittable for Sphere {
         }
         hit_record.t = root;
         hit_record.pos = ray.at(hit_record.t);
-        hit_record.normal = (hit_record.pos.clone() - current_center) / self.radius;
-        let outward_normal = (hit_record.pos.clone() - current_center) / self.radius;
+        hit_record.normal = (hit_record.pos - current_center) / self.radius;
+        let outward_normal = (hit_record.pos - current_center) / self.radius;
         hit_record.front_face = dot(ray.direction(), &outward_normal) < 0.0;
         hit_record.normal = if hit_record.front_face {
             outward_normal
