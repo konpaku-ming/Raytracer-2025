@@ -1,5 +1,4 @@
-use crate::random::random_double;
-use crate::random::random_double_range;
+use crate::random::{random_double, random_double_range};
 use std::fmt;
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign,

@@ -1,6 +1,5 @@
 use crate::aabb::Aabb;
-use crate::hit_checker::Hittable;
-use crate::hit_checker::{HitRecord, HittableList};
+use crate::hit_checker::{HitRecord, Hittable, HittableList};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use std::cmp::Ordering;

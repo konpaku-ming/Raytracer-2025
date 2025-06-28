@@ -2,9 +2,7 @@ use crate::hit_checker::HitRecord;
 use crate::random::random_double;
 use crate::ray::Ray;
 use crate::texture::{SolidColor, Texture};
-use crate::vec3::Vec3;
-use crate::vec3::dot;
-use crate::vec3::unit_vector;
+use crate::vec3::{Vec3, dot, unit_vector};
 use crate::vec3color::Color;
 use std::rc::Rc;
 
