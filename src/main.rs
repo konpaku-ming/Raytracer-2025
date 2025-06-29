@@ -32,7 +32,7 @@ fn perlin_spheres() {
 
     let mut world = HittableList::default();
 
-    let perlin_texture = Rc::new(NoiseTexture::new(4.0));
+    let perlin_texture = Rc::new(NoiseTexture::new());
     let perlin_surface = Rc::new(Lambertian::from_tex(perlin_texture));
     let globe = Rc::new(Sphere::new(
         Point3::new(0.0, 2.0, 0.0),
