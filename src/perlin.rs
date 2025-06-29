@@ -1,10 +1,10 @@
-use crate::random::{random_double, random_int_range};
-use crate::vec3::Point3;
+use crate::random::random_int_range;
+use crate::vec3::{Point3, Vec3, dot, unit_vector};
 
 const POINT_COUNT: usize = 256;
 
 pub struct Perlin {
-    rand_float: [f64; POINT_COUNT],
+    rand_vec: [Vec3; POINT_COUNT],
     perm_x: [i32; POINT_COUNT],
     perm_y: [i32; POINT_COUNT],
     perm_z: [i32; POINT_COUNT],
@@ -12,13 +12,13 @@ pub struct Perlin {
 
 impl Perlin {
     pub fn new() -> Self {
-        let mut rand_float = [0.0; POINT_COUNT];
-        for val in rand_float.iter_mut().take(POINT_COUNT) {
-            *val = random_double();
+        let mut rand_vec = [Vec3::default(); POINT_COUNT];
+        for val in rand_vec.iter_mut().take(POINT_COUNT) {
+            *val = unit_vector(&Vec3::random_range(-1.0, 1.0));
         }
 
         Self {
-            rand_float,
+            rand_vec,
             perm_x: Perlin::generate_perm(),
             perm_y: Perlin::generate_perm(),
             perm_z: Perlin::generate_perm(),
@@ -30,15 +30,11 @@ impl Perlin {
         let v = p.y() - p.y().floor();
         let w = p.z() - p.z().floor();
 
-        let u = u * u * (3.0 - 2.0 * u);
-        let v = v * v * (3.0 - 2.0 * v);
-        let w = w * w * (3.0 - 2.0 * w);
-
         let i = p.x().floor() as i32;
         let j = p.y().floor() as i32;
         let k = p.z().floor() as i32;
 
-        let mut c = [[[0.0f64; 2]; 2]; 2];
+        let mut c = [[[Vec3::default(); 2]; 2]; 2];
 
         for di in 0..2 {
             for dj in 0..2 {
@@ -46,7 +42,7 @@ impl Perlin {
                     let idx = self.perm_x[((i + di) & 255) as usize]
                         ^ self.perm_y[((j + dj) & 255) as usize]
                         ^ self.perm_z[((k + dk) & 255) as usize];
-                    c[di as usize][dj as usize][dk as usize] = self.rand_float[idx as usize];
+                    c[di as usize][dj as usize][dk as usize] = self.rand_vec[idx as usize];
                 }
             }
         }
@@ -69,15 +65,20 @@ impl Perlin {
         }
     }
 
-    fn trilinear(c: [[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+    fn trilinear(c: [[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+        let uu = u * u * (3.0 - 2.0 * u);
+        let vv = v * v * (3.0 - 2.0 * v);
+        let ww = w * w * (3.0 - 2.0 * w);
         let mut accum = 0.0;
+
         for (i, plane) in c.iter().enumerate() {
-            let weight_u = if i == 1 { u } else { 1.0 - u };
+            let weight_u = if i == 1 { uu } else { 1.0 - uu };
             for (j, row) in plane.iter().enumerate() {
-                let weight_v = if j == 1 { v } else { 1.0 - v };
+                let weight_v = if j == 1 { vv } else { 1.0 - vv };
                 for (k, value) in row.iter().enumerate() {
-                    let weight_w = if k == 1 { w } else { 1.0 - w };
-                    accum += weight_u * weight_v * weight_w * value;
+                    let weight_w = if k == 1 { ww } else { 1.0 - ww };
+                    let weight_vec = Vec3::new(u - i as f64, v - j as f64, w - k as f64);
+                    accum += weight_u * weight_v * weight_w * dot(value, &weight_vec);
                 }
             }
         }
