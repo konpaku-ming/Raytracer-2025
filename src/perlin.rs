@@ -30,10 +30,6 @@ impl Perlin {
         let v = p.y() - p.y().floor();
         let w = p.z() - p.z().floor();
 
-        let u = u * u * (3.0 - 2.0 * u);
-        let v = v * v * (3.0 - 2.0 * v);
-        let w = w * w * (3.0 - 2.0 * w);
-
         let i = p.x().floor() as i32;
         let j = p.y().floor() as i32;
         let k = p.z().floor() as i32;
@@ -71,13 +67,13 @@ impl Perlin {
 
     fn trilinear(c: [[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
         let mut accum = 0.0;
-        for i in 0..2 {
-            for j in 0..2 {
-                for k in 0..2 {
-                    let weight_u = if i == 1 { u } else { 1.0 - u };
-                    let weight_v = if j == 1 { v } else { 1.0 - v };
+        for (i, plane) in c.iter().enumerate() {
+            let weight_u = if i == 1 { u } else { 1.0 - u };
+            for (j, row) in plane.iter().enumerate() {
+                let weight_v = if j == 1 { v } else { 1.0 - v };
+                for (k, value) in row.iter().enumerate() {
                     let weight_w = if k == 1 { w } else { 1.0 - w };
-                    accum += weight_u * weight_v * weight_w * c[i][j][k];
+                    accum += weight_u * weight_v * weight_w * value;
                 }
             }
         }
