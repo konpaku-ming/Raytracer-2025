@@ -49,16 +49,18 @@ fn simple_light() {
     ));
 
     let diffuse_light = Rc::new(DiffuseLight::new(Color::new(4.0, 4.0, 4.0)));
-    let light = Rc::new(Quad::new(
+    let quad_light = Rc::new(Quad::new(
         Point3::new(3.0, 1.0, -2.0),
         Vec3::new(2.0, 0.0, 0.0),
         Vec3::new(0.0, 2.0, 0.0),
-        diffuse_light,
+        diffuse_light.clone(),
     ));
+    let sphere_light = Rc::new(Sphere::new(Point3::new(0.0, 7.0, 0.0), 2.0, diffuse_light));
 
     world.add(globe);
     world.add(ground);
-    world.add(light);
+    world.add(quad_light);
+    world.add(sphere_light);
 
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),
