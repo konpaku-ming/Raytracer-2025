@@ -21,7 +21,9 @@ impl Default for Aabb {
 
 impl Aabb {
     pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
-        Self { x, y, z }
+        let mut temp = Aabb { x, y, z };
+        temp.pad_to_minimums();
+        temp
     }
 
     //两个对角点构造
@@ -41,11 +43,13 @@ impl Aabb {
         } else {
             (b[2], a[2])
         };
-        Self {
+        let mut temp = Aabb {
             x: Interval::new(x_min, x_max),
             y: Interval::new(y_min, y_max),
             z: Interval::new(z_min, z_max),
-        }
+        };
+        temp.pad_to_minimums();
+        temp
     }
 
     pub fn from_box(box1: Aabb, box2: Aabb) -> Self {
@@ -105,6 +109,19 @@ impl Aabb {
             1
         } else {
             2
+        }
+    }
+
+    fn pad_to_minimums(&mut self) {
+        let delta = 0.0001;
+        if self.x.size() < delta {
+            self.x = self.x.expand(delta);
+        }
+        if self.y.size() < delta {
+            self.y = self.y.expand(delta);
+        }
+        if self.z.size() < delta {
+            self.z = self.z.expand(delta);
         }
     }
 
