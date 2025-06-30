@@ -1,15 +1,11 @@
 use crate::camera::Camera;
-use crate::hit_checker::{HitRecord, Hittable, HittableList};
+use crate::hit_checker::{HitRecord, Hittable, HittableList, degrees_to_radians};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::sketchpad::Sketchpad;
 use crate::vec3::{Point3, Vec3, cross, unit_vector};
 use crate::vec3color::Color;
 use indicatif::ProgressBar;
-
-fn degrees_to_radians(degrees: f64) -> f64 {
-    degrees * std::f64::consts::PI / 180.0
-}
 
 pub struct RayTracer {
     sketchpad: Sketchpad,

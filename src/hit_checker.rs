@@ -5,6 +5,10 @@ use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3, cross, dot, unit_vector};
 use std::rc::Rc;
 
+pub fn degrees_to_radians(degrees: f64) -> f64 {
+    degrees * std::f64::consts::PI / 180.0
+}
+
 #[derive(Clone)]
 pub struct HitRecord {
     pub pos: Point3,
@@ -334,6 +338,88 @@ impl Hittable for Translate {
             return false;
         }
         rec.pos += self.offset;
+        true
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox
+    }
+}
+
+pub struct RotateY {
+    object: Rc<dyn Hittable>,
+    sin_theta: f64,
+    cos_theta: f64,
+    bbox: Aabb,
+}
+
+impl RotateY {
+    pub fn new(object: Rc<dyn Hittable>, angle: f64) -> Self {
+        let radians = degrees_to_radians(angle);
+        let sin_theta = radians.sin();
+        let cos_theta = radians.cos();
+        let bbox = object.bounding_box();
+        let mut min = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+        let mut max = Point3::new(-f64::INFINITY, -f64::INFINITY, -f64::INFINITY);
+
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let x = if i == 0 { bbox.x.min } else { bbox.x.max };
+                    let y = if j == 0 { bbox.y.min } else { bbox.y.max };
+                    let z = if k == 0 { bbox.z.min } else { bbox.z.max };
+
+                    let new_x = cos_theta * x + sin_theta * z;
+                    let new_z = -sin_theta * x + cos_theta * z;
+                    let tester = Point3::new(new_x, y, new_z);
+
+                    for c in 0..3 {
+                        min[c] = min[c].min(tester[c]);
+                        max[c] = max[c].max(tester[c]);
+                    }
+                }
+            }
+        }
+        let bbox = Aabb::from_points(min, max);
+        Self {
+            object,
+            sin_theta,
+            cos_theta,
+            bbox,
+        }
+    }
+}
+
+impl Hittable for RotateY {
+    fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+        let origin = Point3::new(
+            (self.cos_theta * r.origin().x()) - (self.sin_theta * r.origin().z()),
+            r.origin().y(),
+            (self.sin_theta * r.origin().x()) + (self.cos_theta * r.origin().z()),
+        );
+        let direction = Vec3::new(
+            (self.cos_theta * r.direction().x()) - (self.sin_theta * r.direction().z()),
+            r.direction().y(),
+            (self.sin_theta * r.direction().x()) + (self.cos_theta * r.direction().z()),
+        );
+
+        let rotated_r = Ray::new_with_time(origin, direction, r.time());
+
+        if !self.object.hit(&rotated_r, ray_t, rec) {
+            return false;
+        }
+
+        rec.pos = Point3::new(
+            (self.cos_theta * rec.pos.x()) + (self.sin_theta * rec.pos.z()),
+            rec.pos.y(),
+            (-self.sin_theta * rec.pos.x()) + (self.cos_theta * rec.pos.z()),
+        );
+
+        rec.normal = Vec3::new(
+            (self.cos_theta * rec.normal.x()) + (self.sin_theta * rec.normal.z()),
+            rec.normal.y(),
+            (-self.sin_theta * rec.normal.x()) + (self.cos_theta * rec.normal.z()),
+        );
         true
     }
 
