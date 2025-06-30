@@ -2,7 +2,7 @@ use crate::aabb::Aabb;
 use crate::interval::Interval;
 use crate::material::{DummyMaterial, Material};
 use crate::ray::Ray;
-use crate::vec3::{Point3, Vec3, dot};
+use crate::vec3::{Point3, Vec3, cross, dot, unit_vector};
 use std::rc::Rc;
 
 #[derive(Clone)]
@@ -49,6 +49,15 @@ impl HitRecord {
             u: 0.0,
             v: 0.0,
         }
+    }
+
+    fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
+        self.front_face = dot(r.direction(), &outward_normal) < 0.0;
+        self.normal = if self.front_face {
+            outward_normal
+        } else {
+            -outward_normal
+        };
     }
 }
 
@@ -126,12 +135,7 @@ impl Hittable for Sphere {
         hit_record.pos = ray.at(hit_record.t);
         hit_record.normal = (hit_record.pos - current_center) / self.radius;
         let outward_normal = (hit_record.pos - current_center) / self.radius;
-        hit_record.front_face = dot(ray.direction(), &outward_normal) < 0.0;
-        hit_record.normal = if hit_record.front_face {
-            outward_normal
-        } else {
-            -outward_normal
-        };
+        hit_record.set_face_normal(ray, outward_normal);
         (hit_record.u, hit_record.v) = Sphere::get_sphere_uv(&outward_normal);
         hit_record.mat = self.mat.clone();
         true
@@ -173,6 +177,83 @@ impl Hittable for HittableList {
             }
         }
         hit_anything
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox
+    }
+}
+
+pub struct Quad {
+    q: Point3,
+    u: Vec3,
+    v: Vec3,
+    mat: Rc<dyn Material>,
+    bbox: Aabb,
+    normal: Vec3,
+    d: f64,
+    w: Vec3,
+}
+
+impl Quad {
+    pub fn new(q: Point3, u: Vec3, v: Vec3, mat: Rc<dyn Material>) -> Self {
+        let n = cross(&u, &v);
+        let normal = unit_vector(&n);
+        let d = dot(&normal, &q);
+        let w = n / dot(&n, &n);
+        let mut quad = Quad {
+            q,
+            u,
+            v,
+            mat,
+            bbox: Aabb::default(),
+            normal,
+            d,
+            w,
+        };
+        quad.set_bounding_box();
+        quad
+    }
+
+    fn set_bounding_box(&mut self) {
+        let bbox_diagonal1 = Aabb::from_points(self.q, self.q + self.u + self.v);
+        let bbox_diagonal2 = Aabb::from_points(self.q + self.u, self.q + self.v);
+        self.bbox = Aabb::from_box(bbox_diagonal1, bbox_diagonal2);
+    }
+
+    fn is_interior(&self, a: f64, b: f64, rec: &mut HitRecord) -> bool {
+        let unit_interval = Interval::new(0.0, 1.0);
+        if !unit_interval.contains(a) || !unit_interval.contains(b) {
+            return false;
+        }
+        rec.u = a;
+        rec.v = b;
+        true
+    }
+}
+
+impl Hittable for Quad {
+    fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+        let denom = dot(&self.normal, r.direction());
+        if denom.abs() < 1e-8 {
+            return false;
+        }
+        let t = (self.d - dot(&self.normal, r.origin())) / denom;
+        if !ray_t.contains(t) {
+            return false;
+        }
+        let intersection = r.at(t);
+        let planar_hit_vector = intersection - self.q;
+        let alpha = dot(&self.w, &cross(&planar_hit_vector, &self.v));
+        let beta = dot(&self.w, &cross(&self.u, &planar_hit_vector));
+        if !self.is_interior(alpha, beta, rec) {
+            return false;
+        }
+        rec.t = t;
+        rec.pos = intersection;
+        rec.mat = self.mat.clone();
+        rec.set_face_normal(r, self.normal);
+        true
     }
 
     fn bounding_box(&self) -> Aabb {

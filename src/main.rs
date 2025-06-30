@@ -1,5 +1,5 @@
 use raytracer::bvh::BvhNode;
-use raytracer::hit_checker::{HittableList, Sphere};
+use raytracer::hit_checker::{HittableList, Quad, Sphere};
 use raytracer::material::{Dielectric, Lambertian, Metal};
 use raytracer::random::{random_double, random_double_range};
 use raytracer::raytracer::RayTracer;
@@ -9,13 +9,77 @@ use raytracer::vec3color::Color;
 use std::rc::Rc;
 
 fn main() {
-    let mode = 3;
+    let mode = 4;
     match mode {
         1 => checkered_spheres(),
         2 => earth(),
         3 => perlin_spheres(),
+        4 => quads(),
         _ => bouncing_speres(),
     }
+}
+
+fn quads() {
+    let aspect_ratio = 1.0;
+    let image_width = 400;
+    let samples_per_pixel = 100;
+    let max_depth = 50;
+    let v_fov = 80.0;
+    let look_from = Point3::new(0.0, 0.0, 9.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle = 0.0;
+    let focus_dist = 10.0;
+
+    let mut world = HittableList::default();
+
+    let left_red = Rc::new(Lambertian::new(Color::new(1.0, 0.2, 0.2)));
+    let back_green = Rc::new(Lambertian::new(Color::new(0.2, 1.0, 0.2)));
+    let right_blue = Rc::new(Lambertian::new(Color::new(0.2, 0.2, 1.0)));
+    let upper_orange = Rc::new(Lambertian::new(Color::new(1.0, 0.5, 0.0)));
+    let lower_teal = Rc::new(Lambertian::new(Color::new(0.2, 0.8, 0.8)));
+
+    world.add(Rc::new(Quad::new(
+        Point3::new(-3.0, -2.0, 5.0),
+        Vec3::new(0.0, 0.0, -4.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        left_red,
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(-2.0, -2.0, 0.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        back_green,
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(3.0, -2.0, 1.0),
+        Vec3::new(0.0, 0.0, 4.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        right_blue,
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(-2.0, 3.0, 1.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 4.0),
+        upper_orange,
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(-2.0, -3.0, 5.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -4.0),
+        lower_teal,
+    )));
+
+    let mut raytracer = RayTracer::new(
+        (aspect_ratio, image_width),
+        (look_from, look_at, vup),
+        world,
+        samples_per_pixel,
+        max_depth,
+        v_fov,
+        (defocus_angle, focus_dist),
+    );
+    raytracer.render();
 }
 
 fn perlin_spheres() {
