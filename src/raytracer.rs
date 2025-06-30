@@ -19,17 +19,18 @@ pub struct RayTracer {
     hittable_list: HittableList,
     pixel_samples_scale: f64,
     max_depth: i32,
+    background: Color,
 }
 
 impl RayTracer {
     pub fn new(
         (aspect_ratio, width): (f64, u32),
-        (look_from, look_at, vup): (Point3, Point3, Vec3),
+        (look_from, look_at, vup, v_fov): (Point3, Point3, Vec3, f64),
         hittable_list: HittableList,
         samples_per_pixel: i32,
         max_depth: i32,
-        v_fov: f64,
         (defocus_angle, focus_dist): (f64, f64),
+        background: Color,
     ) -> Self {
         let height = (width as f64 / aspect_ratio) as u32;
         let height = if height < 1 { 1 } else { height };
@@ -74,6 +75,7 @@ impl RayTracer {
             hittable_list,
             pixel_samples_scale,
             max_depth,
+            background,
         }
     }
 
@@ -88,14 +90,14 @@ impl RayTracer {
         {
             let mut scattered = Ray::default();
             let mut attenuation = Color::default();
+            let color_from_emission = rec.mat.emitted(rec.u, rec.v, &rec.pos);
             return if rec.mat.scatter(ray, &rec, &mut attenuation, &mut scattered) {
-                attenuation * self.ray_color(&scattered, depth - 1)
+                attenuation * self.ray_color(&scattered, depth - 1) + color_from_emission
             } else {
-                Color::new(0.0, 0.0, 0.0)
+                color_from_emission
             };
         }
-        let a = 0.5 * (unit_vector(ray.direction()).y() + 1.0);
-        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+        self.background
     }
 
     pub fn render(&mut self) {

@@ -2,7 +2,7 @@ use crate::hit_checker::HitRecord;
 use crate::random::random_double;
 use crate::ray::Ray;
 use crate::texture::{SolidColor, Texture};
-use crate::vec3::{Vec3, dot, unit_vector};
+use crate::vec3::{Point3, Vec3, dot, unit_vector};
 use crate::vec3color::Color;
 use std::rc::Rc;
 
@@ -15,6 +15,10 @@ pub trait Material {
         _scattered: &mut Ray,
     ) -> bool {
         false
+    }
+
+    fn emitted(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
+        Color::new(0.0, 0.0, 0.0)
     }
 }
 
@@ -128,5 +132,27 @@ impl Material for Dielectric {
         };
         *scattered = Ray::new_with_time(rec.pos, direction, r_in.time());
         true
+    }
+}
+
+pub struct DiffuseLight {
+    tex: Rc<dyn Texture>,
+}
+
+impl DiffuseLight {
+    pub fn new(emit: Color) -> Self {
+        Self {
+            tex: Rc::new(SolidColor::new(emit)),
+        }
+    }
+
+    pub fn from_texture(tex: Rc<dyn Texture>) -> Self {
+        Self { tex }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
+        self.tex.value(u, v, p)
     }
 }

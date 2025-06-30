@@ -1,6 +1,6 @@
 use raytracer::bvh::BvhNode;
 use raytracer::hit_checker::{HittableList, Quad, Sphere};
-use raytracer::material::{Dielectric, Lambertian, Metal};
+use raytracer::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use raytracer::random::{random_double, random_double_range};
 use raytracer::raytracer::RayTracer;
 use raytracer::texture::{CheckerTexture, ImageTexture, NoiseTexture};
@@ -9,14 +9,67 @@ use raytracer::vec3color::Color;
 use std::rc::Rc;
 
 fn main() {
-    let mode = 4;
+    let mode = 5;
     match mode {
         1 => checkered_spheres(),
         2 => earth(),
         3 => perlin_spheres(),
         4 => quads(),
+        5 => simple_light(),
         _ => bouncing_speres(),
     }
+}
+
+fn simple_light() {
+    let aspect_ratio = 16.0 / 9.0;
+    let image_width = 400;
+    let samples_per_pixel = 100;
+    let max_depth = 50;
+    let v_fov = 20.0;
+    let look_from = Point3::new(26.0, 3.0, 6.0);
+    let look_at = Point3::new(0.0, 2.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle = 0.0;
+    let focus_dist = 10.0;
+    let background = Color::new(0.0, 0.0, 0.0);
+
+    let mut world = HittableList::default();
+
+    let perlin_texture = Rc::new(NoiseTexture::new(4.0));
+    let perlin_surface = Rc::new(Lambertian::from_tex(perlin_texture));
+    let globe = Rc::new(Sphere::new(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        perlin_surface.clone(),
+    ));
+    let ground = Rc::new(Sphere::new(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        perlin_surface.clone(),
+    ));
+
+    let diffuse_light = Rc::new(DiffuseLight::new(Color::new(4.0, 4.0, 4.0)));
+    let light = Rc::new(Quad::new(
+        Point3::new(3.0, 1.0, -2.0),
+        Vec3::new(2.0, 0.0, 0.0),
+        Vec3::new(0.0, 2.0, 0.0),
+        diffuse_light,
+    ));
+
+    world.add(globe);
+    world.add(ground);
+    world.add(light);
+
+    let mut raytracer = RayTracer::new(
+        (aspect_ratio, image_width),
+        (look_from, look_at, vup, v_fov),
+        world,
+        samples_per_pixel,
+        max_depth,
+        (defocus_angle, focus_dist),
+        background,
+    );
+    raytracer.render();
 }
 
 fn quads() {
@@ -30,6 +83,7 @@ fn quads() {
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let defocus_angle = 0.0;
     let focus_dist = 10.0;
+    let background = Color::new(0.70, 0.80, 1.00);
 
     let mut world = HittableList::default();
 
@@ -72,12 +126,12 @@ fn quads() {
 
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),
-        (look_from, look_at, vup),
+        (look_from, look_at, vup, v_fov),
         world,
         samples_per_pixel,
         max_depth,
-        v_fov,
         (defocus_angle, focus_dist),
+        background,
     );
     raytracer.render();
 }
@@ -93,6 +147,7 @@ fn perlin_spheres() {
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let defocus_angle = 0.0;
     let focus_dist = 10.0;
+    let background = Color::new(0.70, 0.80, 1.00);
 
     let mut world = HittableList::default();
 
@@ -113,12 +168,12 @@ fn perlin_spheres() {
 
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),
-        (look_from, look_at, vup),
+        (look_from, look_at, vup, v_fov),
         world,
         samples_per_pixel,
         max_depth,
-        v_fov,
         (defocus_angle, focus_dist),
+        background,
     );
     raytracer.render();
 }
@@ -134,6 +189,7 @@ fn earth() {
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let defocus_angle = 0.0;
     let focus_dist = 10.0;
+    let background = Color::new(0.70, 0.80, 1.00);
 
     let mut world = HittableList::default();
 
@@ -144,12 +200,12 @@ fn earth() {
 
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),
-        (look_from, look_at, vup),
+        (look_from, look_at, vup, v_fov),
         world,
         samples_per_pixel,
         max_depth,
-        v_fov,
         (defocus_angle, focus_dist),
+        background,
     );
     raytracer.render();
 }
@@ -165,6 +221,8 @@ fn checkered_spheres() {
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let defocus_angle = 0.0;
     let focus_dist = 10.0;
+    let background = Color::new(0.70, 0.80, 1.00);
+
     let mut hittable_list = HittableList::default();
     let checker = Rc::new(CheckerTexture::from_colors(
         0.32,
@@ -186,12 +244,12 @@ fn checkered_spheres() {
     world.add(Rc::new(bvh));
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),
-        (look_from, look_at, vup),
+        (look_from, look_at, vup, v_fov),
         world,
         samples_per_pixel,
         max_depth,
-        v_fov,
         (defocus_angle, focus_dist),
+        background,
     );
     raytracer.render();
 }
@@ -207,6 +265,8 @@ fn bouncing_speres() {
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let defocus_angle = 0.6;
     let focus_dist = 10.0;
+    let background = Color::new(0.70, 0.80, 1.00);
+
     let mut hittable_list = HittableList::default();
 
     let checker = Rc::new(CheckerTexture::from_colors(
@@ -278,12 +338,12 @@ fn bouncing_speres() {
     world.add(Rc::new(bvh));
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),
-        (look_from, look_at, vup),
+        (look_from, look_at, vup, v_fov),
         world,
         samples_per_pixel,
         max_depth,
-        v_fov,
         (defocus_angle, focus_dist),
+        background,
     );
     raytracer.render();
 }
