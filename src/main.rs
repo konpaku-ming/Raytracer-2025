@@ -1,5 +1,5 @@
 use raytracer::bvh::BvhNode;
-use raytracer::hit_checker::{HittableList, Quad, Sphere, make_box};
+use raytracer::hit_checker::{HittableList, Quad, RotateY, Sphere, Translate, make_box};
 use raytracer::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use raytracer::random::{random_double, random_double_range};
 use raytracer::raytracer::RayTracer;
@@ -77,16 +77,28 @@ fn cornell_box() {
         Vec3::new(0.0, 555.0, 0.0),
         white.clone(),
     )));
-    world.add(make_box(
-        Point3::new(130.0, 0.0, 65.0),
-        Point3::new(295.0, 165.0, 230.0),
+
+    let box1 = make_box(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 330.0, 165.0),
         white.clone(),
-    ));
-    world.add(make_box(
-        Point3::new(265.0, 0.0, 295.0),
-        Point3::new(430.0, 330.0, 460.0),
-        white,
-    ));
+    );
+    let box1 = Rc::new(RotateY::new(box1, 15.0));
+    let box1 = Rc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
+    world.add(box1);
+
+    let box2 = make_box(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 165.0, 165.0),
+        white.clone(),
+    );
+    let box2 = Rc::new(RotateY::new(box2, -18.0));
+    let box2 = Rc::new(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
+    world.add(box2);
+
+    let bvh = BvhNode::from_list(&mut world);
+    let mut world = HittableList::default();
+    world.add(Rc::new(bvh));
 
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),
