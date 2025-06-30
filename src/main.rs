@@ -129,7 +129,7 @@ fn final_scene() {
 
     let aspect_ratio = 1.0;
     let image_width = 800;
-    let samples_per_pixel = 1000;
+    let samples_per_pixel = 10000;
     let max_depth = 40;
     let v_fov = 40.0;
     let look_from = Point3::new(478.0, 278.0, -600.0);
