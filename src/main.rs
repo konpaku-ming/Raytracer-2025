@@ -1,7 +1,7 @@
 use raytracer::bvh::BvhNode;
 use raytracer::hit_checker::HittableList;
 use raytracer::material::{Dielectric, DiffuseLight, Lambertian, Metal};
-use raytracer::modeling::{Quad, RotateY, Sphere, Translate, make_box};
+use raytracer::modeling::{ConstantMedium, Quad, RotateY, Sphere, Translate, make_box};
 use raytracer::random::{random_double, random_double_range};
 use raytracer::raytracer::RayTracer;
 use raytracer::texture::{CheckerTexture, ImageTexture, NoiseTexture};
@@ -10,7 +10,7 @@ use raytracer::vec3color::Color;
 use std::rc::Rc;
 
 fn main() {
-    let mode = 6;
+    let mode = 7;
     match mode {
         1 => checkered_spheres(),
         2 => earth(),
@@ -18,8 +18,108 @@ fn main() {
         4 => quads(),
         5 => simple_light(),
         6 => cornell_box(),
+        7 => cornell_smoke(),
         _ => bouncing_speres(),
     }
+}
+
+fn cornell_smoke() {
+    let aspect_ratio = 1.0;
+    let image_width = 600;
+    let samples_per_pixel = 200;
+    let max_depth = 50;
+    let v_fov = 40.0;
+    let look_from = Point3::new(278.0, 278.0, -800.0);
+    let look_at = Point3::new(278.0, 278.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle = 0.0;
+    let focus_dist = 10.0;
+    let background = Color::new(0.0, 0.0, 0.0);
+
+    let mut world = HittableList::default();
+
+    let red = Rc::new(Lambertian::new(Color::new(0.65, 0.05, 0.05)));
+    let white = Rc::new(Lambertian::new(Color::new(0.73, 0.73, 0.73)));
+    let green = Rc::new(Lambertian::new(Color::new(0.12, 0.45, 0.15)));
+    let light = Rc::new(DiffuseLight::new(Color::new(7.0, 7.0, 7.0)));
+
+    world.add(Rc::new(Quad::new(
+        Point3::new(550.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        green,
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        red,
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(113.0, 554.0, 127.0),
+        Vec3::new(330.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 305.0),
+        light,
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        white.clone(),
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(555.0, 555.0, 555.0),
+        Vec3::new(-555.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -555.0),
+        white.clone(),
+    )));
+    world.add(Rc::new(Quad::new(
+        Point3::new(0.0, 0.0, 555.0),
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        white.clone(),
+    )));
+
+    let box1 = make_box(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 330.0, 165.0),
+        white.clone(),
+    );
+    let box1 = Rc::new(RotateY::new(box1, 15.0));
+    let box1 = Rc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
+    world.add(Rc::new(ConstantMedium::from_color(
+        box1,
+        0.01,
+        Color::new(0.0, 0.0, 0.0),
+    )));
+
+    let box2 = make_box(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 165.0, 165.0),
+        white.clone(),
+    );
+    let box2 = Rc::new(RotateY::new(box2, -18.0));
+    let box2 = Rc::new(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
+    world.add(Rc::new(ConstantMedium::from_color(
+        box2,
+        0.01,
+        Color::new(1.0, 1.0, 1.0),
+    )));
+
+    let bvh = BvhNode::from_list(&mut world);
+    let mut world = HittableList::default();
+    world.add(Rc::new(bvh));
+
+    let mut raytracer = RayTracer::new(
+        (aspect_ratio, image_width),
+        (look_from, look_at, vup, v_fov),
+        world,
+        samples_per_pixel,
+        max_depth,
+        (defocus_angle, focus_dist),
+        background,
+    );
+    raytracer.render();
 }
 
 fn cornell_box() {
