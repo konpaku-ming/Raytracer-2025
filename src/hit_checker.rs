@@ -309,3 +309,35 @@ pub fn make_box(a: Point3, b: Point3, mat: Rc<dyn Material>) -> Rc<HittableList>
     )));
     Rc::new(sides)
 }
+
+pub struct Translate {
+    object: Rc<dyn Hittable>,
+    offset: Vec3,
+    bbox: Aabb,
+}
+
+impl Translate {
+    pub fn new(object: Rc<dyn Hittable>, offset: Vec3) -> Self {
+        let bbox = object.bounding_box() + offset;
+        Self {
+            object,
+            offset,
+            bbox,
+        }
+    }
+}
+
+impl Hittable for Translate {
+    fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+        let moved_r = Ray::new_with_time(*r.origin() - self.offset, *r.direction(), r.time());
+        if !self.object.hit(&moved_r, ray_t, rec) {
+            return false;
+        }
+        rec.pos += self.offset;
+        true
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox
+    }
+}
