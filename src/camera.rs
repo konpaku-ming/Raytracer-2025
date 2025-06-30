@@ -7,7 +7,6 @@ pub struct Camera {
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
     pixel00_loc: Vec3,
-    samples_per_pixel: i32,
     defocus_angle: f64,
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
@@ -19,15 +18,13 @@ impl Camera {
         pixel_delta_u: Vec3,
         pixel_delta_v: Vec3,
         pixel00_loc: Vec3,
-        samples_per_pixel: i32,
         (defocus_angle, defocus_disk_u, defocus_disk_v): (f64, Vec3, Vec3),
     ) -> Self {
         Self {
             ctr: center,
             pixel_delta_u,
             pixel_delta_v,
-            pixel00_loc,       //原点像素位置
-            samples_per_pixel, //每个像素采样数量
+            pixel00_loc,
             defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
@@ -57,16 +54,6 @@ impl Camera {
         let ray_direction = pixel_sample - ray_origin;
         let ray_time = random_double(); //0-1之间随机时间
         Ray::new_with_time(ray_origin, ray_direction, ray_time)
-    }
-
-    pub fn get_ray_samples(&self, i: u32, j: u32) -> Vec<Ray> {
-        //获得指定位置的光线样本
-        let mut ray_samples = Vec::new();
-        for _sample in 0..self.samples_per_pixel {
-            let ray = self.get_ray(i, j);
-            ray_samples.push(ray);
-        }
-        ray_samples
     }
 
     pub fn defocus_disk_sample(&self) -> Point3 {

@@ -79,8 +79,8 @@ pub struct HittableList {
 
 impl HittableList {
     pub fn add(&mut self, object: Rc<dyn Hittable>) {
-        self.objects.push(object.clone());
         self.bbox = Aabb::from_box(self.bbox, object.bounding_box());
+        self.objects.push(object);
     }
 }
 

@@ -13,7 +13,7 @@ pub struct RayTracer {
     width: u32,
     height: u32,
     hittable_list: HittableList,
-    pixel_samples_scale: f64,
+    samples_per_pixel: i32,
     max_depth: i32,
     background: Color,
 }
@@ -47,7 +47,6 @@ impl RayTracer {
         let pixel_delta_u = viewport_u / width as f64;
         let pixel_delta_v = viewport_v / height as f64;
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-        let pixel_samples_scale = 1.0 / samples_per_pixel as f64;
 
         let defocus_radius = focus_dist * degrees_to_radians(defocus_angle / 2.0).tan();
         let defocus_disk_u = u * defocus_radius;
@@ -58,7 +57,6 @@ impl RayTracer {
             pixel_delta_u,
             pixel_delta_v,
             pixel00_loc,
-            samples_per_pixel,
             (defocus_angle, defocus_disk_u, defocus_disk_v),
         );
         let sketchpad = Sketchpad::new(width, aspect_ratio);
@@ -69,7 +67,7 @@ impl RayTracer {
             width,
             height,
             hittable_list,
-            pixel_samples_scale,
+            samples_per_pixel,
             max_depth,
             background,
         }
@@ -104,15 +102,15 @@ impl RayTracer {
             ProgressBar::new(self.height as u64)
         };
 
+        let pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
+
         for j in 0..self.height {
             for i in 0..self.width {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                let ray_samples = self.camera.get_ray_samples(i, j);
-                for r in ray_samples {
-                    pixel_color += self.ray_color(&r, self.max_depth);
+                for _ in 0..self.samples_per_pixel {
+                    pixel_color += self.ray_color(&self.camera.get_ray(i, j), self.max_depth);
                 }
-                self.sketchpad
-                    .draw(i, j, pixel_color * self.pixel_samples_scale);
+                self.sketchpad.draw(i, j, pixel_color * pixel_samples_scale);
             }
             progress.inc(1);
         }
