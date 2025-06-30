@@ -1,9 +1,12 @@
 use crate::aabb::Aabb;
 use crate::hit_checker::{HitRecord, Hittable, HittableList, degrees_to_radians};
 use crate::interval::Interval;
-use crate::material::Material;
+use crate::material::{Isotropic, Material};
+use crate::random::random_double;
 use crate::ray::Ray;
+use crate::texture::Texture;
 use crate::vec3::{Point3, Vec3, cross, dot, unit_vector};
+use crate::vec3color::Color;
 use std::rc::Rc;
 
 pub struct Sphere {
@@ -322,5 +325,74 @@ impl Hittable for RotateY {
 
     fn bounding_box(&self) -> Aabb {
         self.bbox
+    }
+}
+
+pub struct ConstantMedium {
+    boundary: Rc<dyn Hittable>,
+    neg_inv_density: f64,
+    phase_function: Rc<dyn Material>,
+}
+
+impl ConstantMedium {
+    pub fn from_texture(boundary: Rc<dyn Hittable>, density: f64, tex: Rc<dyn Texture>) -> Self {
+        Self {
+            boundary,
+            neg_inv_density: -1.0 / density,
+            phase_function: Rc::new(Isotropic::new_from_texture(tex)),
+        }
+    }
+
+    pub fn from_color(boundary: Rc<dyn Hittable>, density: f64, color: Color) -> Self {
+        Self {
+            boundary,
+            neg_inv_density: -1.0 / density,
+            phase_function: Rc::new(Isotropic::new_from_color(color)),
+        }
+    }
+}
+
+impl Hittable for ConstantMedium {
+    fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+        let mut rec1 = HitRecord::default();
+        let mut rec2 = HitRecord::default();
+
+        if !self.boundary.hit(r, Interval::UNIVERSE, &mut rec1) {
+            return false;
+        }
+
+        if !self
+            .boundary
+            .hit(r, Interval::new(rec1.t + 0.0001, f64::INFINITY), &mut rec2)
+        {
+            return false;
+        }
+
+        rec1.t = rec1.t.max(ray_t.min);
+        rec2.t = rec2.t.min(ray_t.max);
+
+        if rec1.t >= rec2.t {
+            return false;
+        }
+
+        rec1.t = rec1.t.max(0.0);
+        let ray_length = r.direction().length();
+        let distance_inside = (rec2.t - rec1.t) * ray_length;
+        let hit_distance = self.neg_inv_density * random_double().ln();
+
+        if hit_distance > distance_inside {
+            return false;
+        }
+
+        rec.t = rec1.t + hit_distance / ray_length;
+        rec.pos = r.at(rec.t);
+        rec.normal = Vec3::new(1.0, 0.0, 0.0);
+        rec.front_face = true;
+        rec.mat = self.phase_function.clone();
+        true
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        self.boundary.bounding_box()
     }
 }
