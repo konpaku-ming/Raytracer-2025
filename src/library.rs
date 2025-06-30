@@ -4,6 +4,7 @@ pub mod camera;
 pub mod hit_checker;
 pub mod interval;
 pub mod material;
+pub mod modeling;
 pub mod my_image;
 pub mod perlin;
 pub mod random;

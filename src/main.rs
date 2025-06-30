@@ -1,6 +1,7 @@
 use raytracer::bvh::BvhNode;
-use raytracer::hit_checker::{HittableList, Quad, RotateY, Sphere, Translate, make_box};
+use raytracer::hit_checker::HittableList;
 use raytracer::material::{Dielectric, DiffuseLight, Lambertian, Metal};
+use raytracer::modeling::{Quad, RotateY, Sphere, Translate, make_box};
 use raytracer::random::{random_double, random_double_range};
 use raytracer::raytracer::RayTracer;
 use raytracer::texture::{CheckerTexture, ImageTexture, NoiseTexture};
