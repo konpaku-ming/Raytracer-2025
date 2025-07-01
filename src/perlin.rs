@@ -1,4 +1,4 @@
-use crate::random::random_int_range;
+use crate::random::{random_int_range, random_range};
 use crate::vec3::{Point3, Vec3, dot, unit_vector};
 
 const POINT_COUNT: usize = 256;
@@ -14,7 +14,7 @@ impl Perlin {
     pub fn new() -> Self {
         let mut rand_vec = [Vec3::default(); POINT_COUNT];
         for val in rand_vec.iter_mut().take(POINT_COUNT) {
-            *val = unit_vector(&Vec3::random_range(-1.0, 1.0));
+            *val = unit_vector(&random_range(-1.0, 1.0));
         }
 
         Self {

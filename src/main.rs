@@ -2,7 +2,7 @@ use raytracer::bvh::BvhNode;
 use raytracer::hit_checker::HittableList;
 use raytracer::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use raytracer::modeling::{ConstantMedium, Quad, RotateY, Sphere, Translate, make_box};
-use raytracer::random::{random_double, random_double_range};
+use raytracer::random::{random, random_double, random_double_range, random_range};
 use raytracer::raytracer::RayTracer;
 use raytracer::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 use raytracer::vec3::{Point3, Vec3};
@@ -117,7 +117,7 @@ fn final_scene() {
     let ns = 1000;
     for _ in 0..ns {
         boxes2.add(Rc::new(Sphere::new(
-            Point3::random_range(0.0, 165.0),
+            random_range(0.0, 165.0),
             10.0,
             white.clone(),
         )));
@@ -618,7 +618,7 @@ fn bouncing_speres() {
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 if choose_mat < 0.8 {
-                    let albedo = Color::random() * Color::random();
+                    let albedo = random() * random();
                     let center2 = center + Vec3::new(0.0, random_double_range(0.0, 0.5), 0.0);
                     let sphere_material = Rc::new(Lambertian::new(albedo));
                     hittable_list.add(Rc::new(Sphere::new_moving(
@@ -628,7 +628,7 @@ fn bouncing_speres() {
                         sphere_material,
                     )));
                 } else if choose_mat < 0.95 {
-                    let albedo = Color::random_range(0.5, 1.0);
+                    let albedo = random_range(0.5, 1.0);
                     let fuzz = random_double_range(0.0, 0.5);
                     let sphere_material = Rc::new(Metal::new(albedo, fuzz));
                     hittable_list.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));

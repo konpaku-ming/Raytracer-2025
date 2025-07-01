@@ -108,7 +108,8 @@ impl RayTracer {
             for i in 0..self.width {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
-                    pixel_color += self.ray_color(&self.camera.get_ray(i, j), self.max_depth);
+                    let r = self.camera.get_ray(i, j);
+                    pixel_color += self.ray_color(&r, self.max_depth);
                 }
                 self.sketchpad.draw(i, j, pixel_color * pixel_samples_scale);
             }
