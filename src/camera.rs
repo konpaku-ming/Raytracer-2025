@@ -35,12 +35,12 @@ impl Camera {
         self.ctr
     }
 
-    pub fn sample_square(&mut self) -> Vec3 {
+    pub fn sample_square(&self) -> Vec3 {
         //二维随机向量
         Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
     }
 
-    pub fn get_ray(&mut self, i: u32, j: u32) -> Ray {
+    pub fn get_ray(&self, i: u32, j: u32) -> Ray {
         //向指定位置发射一条光线
         let offset = self.sample_square(); //小范围内随机取样
         let pixel_sample = self.pixel00_loc
@@ -56,7 +56,7 @@ impl Camera {
         Ray::new_with_time(ray_origin, ray_direction, ray_time)
     }
 
-    pub fn defocus_disk_sample(&mut self) -> Point3 {
+    pub fn defocus_disk_sample(&self) -> Point3 {
         let p = random_in_unit_disk();
         self.center() + (p[0] * self.defocus_disk_u) + (p[1] * self.defocus_disk_v)
     }

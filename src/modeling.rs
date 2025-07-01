@@ -7,17 +7,17 @@ use crate::ray::Ray;
 use crate::texture::Texture;
 use crate::vec3::{Point3, Vec3, cross, dot, unit_vector};
 use crate::vec3color::Color;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct Sphere {
     center: Ray,
     radius: f64,
-    mat: Rc<dyn Material>,
+    mat: Arc<dyn Material + Send + Sync>,
     bbox: Aabb,
 }
 
 impl Sphere {
-    pub fn new(static_center: Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
+    pub fn new(static_center: Point3, radius: f64, mat: Arc<dyn Material + Send + Sync>) -> Self {
         let r_vec = Vec3::new(radius, radius, radius);
         Self {
             center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
@@ -31,7 +31,7 @@ impl Sphere {
         center1: Point3,
         center2: Point3,
         radius: f64,
-        mat: Rc<dyn Material>,
+        mat: Arc<dyn Material + Send + Sync>,
     ) -> Self {
         let center = Ray::new(center1, center2 - center1);
         let r_vec = Vec3::new(radius, radius, radius);
@@ -92,7 +92,7 @@ pub struct Quad {
     q: Point3,
     u: Vec3,
     v: Vec3,
-    mat: Rc<dyn Material>,
+    mat: Arc<dyn Material + Send + Sync>,
     bbox: Aabb,
     normal: Vec3,
     d: f64,
@@ -100,7 +100,7 @@ pub struct Quad {
 }
 
 impl Quad {
-    pub fn new(q: Point3, u: Vec3, v: Vec3, mat: Rc<dyn Material>) -> Self {
+    pub fn new(q: Point3, u: Vec3, v: Vec3, mat: Arc<dyn Material + Send + Sync>) -> Self {
         let n = cross(&u, &v);
         let normal = unit_vector(&n);
         let d = dot(&normal, &q);
@@ -165,7 +165,7 @@ impl Hittable for Quad {
     }
 }
 
-pub fn make_box(a: Point3, b: Point3, mat: Rc<dyn Material>) -> Rc<HittableList> {
+pub fn make_box(a: Point3, b: Point3, mat: Arc<dyn Material + Send + Sync>) -> Arc<HittableList> {
     let mut sides = HittableList::default();
 
     let min = Point3::new(a.x().min(b.x()), a.y().min(b.y()), a.z().min(b.z()));
@@ -175,53 +175,53 @@ pub fn make_box(a: Point3, b: Point3, mat: Rc<dyn Material>) -> Rc<HittableList>
     let dy = Vec3::new(0.0, max.y() - min.y(), 0.0);
     let dz = Vec3::new(0.0, 0.0, max.z() - min.z());
 
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(min.x(), min.y(), max.z()),
         dx,
         dy,
         mat.clone(), //front
     )));
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(max.x(), min.y(), max.z()),
         -dz,
         dy,
         mat.clone(), //right
     )));
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(max.x(), min.y(), min.z()),
         -dx,
         dy,
         mat.clone(), //back
     )));
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(min.x(), min.y(), min.z()),
         dz,
         dy,
         mat.clone(), //left
     )));
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(min.x(), max.y(), max.z()),
         dx,
         -dz,
         mat.clone(), //top
     )));
-    sides.add(Rc::new(Quad::new(
+    sides.add(Arc::new(Quad::new(
         Point3::new(min.x(), min.y(), min.z()),
         dx,
         dz,
         mat.clone(), //bottom
     )));
-    Rc::new(sides)
+    Arc::new(sides)
 }
 
 pub struct Translate {
-    object: Rc<dyn Hittable>,
+    object: Arc<dyn Hittable + Send + Sync>,
     offset: Vec3,
     bbox: Aabb,
 }
 
 impl Translate {
-    pub fn new(object: Rc<dyn Hittable>, offset: Vec3) -> Self {
+    pub fn new(object: Arc<dyn Hittable + Send + Sync>, offset: Vec3) -> Self {
         let bbox = object.bounding_box() + offset;
         Self {
             object,
@@ -247,14 +247,14 @@ impl Hittable for Translate {
 }
 
 pub struct RotateY {
-    object: Rc<dyn Hittable>,
+    object: Arc<dyn Hittable>,
     sin_theta: f64,
     cos_theta: f64,
     bbox: Aabb,
 }
 
 impl RotateY {
-    pub fn new(object: Rc<dyn Hittable>, angle: f64) -> Self {
+    pub fn new(object: Arc<dyn Hittable>, angle: f64) -> Self {
         let radians = degrees_to_radians(angle);
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();
@@ -329,25 +329,33 @@ impl Hittable for RotateY {
 }
 
 pub struct ConstantMedium {
-    boundary: Rc<dyn Hittable>,
+    boundary: Arc<dyn Hittable + Send + Sync>,
     neg_inv_density: f64,
-    phase_function: Rc<dyn Material>,
+    phase_function: Arc<dyn Material + Send + Sync>,
 }
 
 impl ConstantMedium {
-    pub fn from_texture(boundary: Rc<dyn Hittable>, density: f64, tex: Rc<dyn Texture>) -> Self {
+    pub fn from_texture(
+        boundary: Arc<dyn Hittable>,
+        density: f64,
+        tex: Arc<dyn Texture + Send + Sync>,
+    ) -> Self {
         Self {
             boundary,
             neg_inv_density: -1.0 / density,
-            phase_function: Rc::new(Isotropic::new_from_texture(tex)),
+            phase_function: Arc::new(Isotropic::new_from_texture(tex)),
         }
     }
 
-    pub fn from_color(boundary: Rc<dyn Hittable>, density: f64, color: Color) -> Self {
+    pub fn from_color(
+        boundary: Arc<dyn Hittable + Send + Sync>,
+        density: f64,
+        color: Color,
+    ) -> Self {
         Self {
             boundary,
             neg_inv_density: -1.0 / density,
-            phase_function: Rc::new(Isotropic::new_from_color(color)),
+            phase_function: Arc::new(Isotropic::new_from_color(color)),
         }
     }
 }
