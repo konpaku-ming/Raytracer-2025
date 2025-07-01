@@ -1,5 +1,5 @@
 use crate::hit_checker::HitRecord;
-use crate::random::random_double;
+use crate::random::{random_double, random_unit_vector};
 use crate::ray::Ray;
 use crate::texture::{SolidColor, Texture};
 use crate::vec3::{Point3, Vec3, dot, unit_vector};
@@ -51,7 +51,7 @@ impl Material for Lambertian {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool {
-        let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
+        let mut scatter_direction = rec.normal + random_unit_vector();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
@@ -84,7 +84,7 @@ impl Material for Metal {
         scattered: &mut Ray,
     ) -> bool {
         let mut reflected = Vec3::reflect(r_in.direction(), &rec.normal);
-        reflected = unit_vector(&reflected) + (self.fuzz * Vec3::random_unit_vector());
+        reflected = unit_vector(&reflected) + (self.fuzz * random_unit_vector());
         *scattered = Ray::new_with_time(rec.pos, reflected, r_in.time());
         *attenuation = self.albedo;
         dot(scattered.direction(), &rec.normal) > 0.0
@@ -181,7 +181,7 @@ impl Material for Isotropic {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool {
-        *scattered = Ray::new_with_time(rec.pos, Vec3::random_unit_vector(), r_in.time());
+        *scattered = Ray::new_with_time(rec.pos, random_unit_vector(), r_in.time());
         *attenuation = self.tex.value(rec.u, rec.v, &rec.pos);
         true
     }

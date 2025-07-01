@@ -2,7 +2,7 @@ use crate::aabb::Aabb;
 use crate::hit_checker::{HitRecord, Hittable, HittableList, degrees_to_radians};
 use crate::interval::Interval;
 use crate::material::{Isotropic, Material};
-use crate::random::random_double;
+use crate::random::random_double_range;
 use crate::ray::Ray;
 use crate::texture::Texture;
 use crate::vec3::{Point3, Vec3, cross, dot, unit_vector};
@@ -378,7 +378,7 @@ impl Hittable for ConstantMedium {
         rec1.t = rec1.t.max(0.0);
         let ray_length = r.direction().length();
         let distance_inside = (rec2.t - rec1.t) * ray_length;
-        let hit_distance = self.neg_inv_density * random_double().ln();
+        let hit_distance = self.neg_inv_density * random_double_range(0.0, 1.0).ln();
 
         if hit_distance > distance_inside {
             return false;
