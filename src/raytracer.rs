@@ -56,12 +56,16 @@ impl RayTracer {
         let defocus_disk_u = u * defocus_radius;
         let defocus_disk_v = v * defocus_radius;
 
+        let sqrt_spp = (samples_per_pixel as f64).sqrt() as u32;
+        let recip_sqrt_spp = 1.0 / sqrt_spp as f64;
+
         let camera = Camera::new(
             center,
             pixel_delta_u,
             pixel_delta_v,
             pixel00_loc,
             (defocus_angle, defocus_disk_u, defocus_disk_v),
+            recip_sqrt_spp,
         );
         let sketchpad = Sketchpad::new(width, aspect_ratio);
 
@@ -104,7 +108,9 @@ impl RayTracer {
         let height = self.height;
         let samples_per_pixel = self.samples_per_pixel;
         let max_depth = self.max_depth;
-        let pixel_samples_scale = 1.0 / samples_per_pixel as f64;
+
+        let sqrt_spp = (samples_per_pixel as f64).sqrt() as u32;
+        let pixel_samples_scale = 1.0 / (sqrt_spp * sqrt_spp) as f64;
 
         let total_pixels = width * height;
         let progress = Arc::new(AtomicUsize::new(0));
@@ -127,9 +133,12 @@ impl RayTracer {
                 let y = index as u32 / width;
 
                 let mut color = Color::new(0.0, 0.0, 0.0);
-                for _ in 0..samples_per_pixel {
-                    let ray = self.camera.get_ray(x, y);
-                    color += self.ray_color(&ray, max_depth);
+
+                for s_j in 0..sqrt_spp {
+                    for s_i in 0..sqrt_spp {
+                        let r = self.camera.get_ray(x, y, s_i, s_j);
+                        color += self.ray_color(&r, max_depth);
+                    }
                 }
                 *pixel = color * pixel_samples_scale;
 

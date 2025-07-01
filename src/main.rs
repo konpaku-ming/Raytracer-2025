@@ -10,7 +10,7 @@ use raytracer::vec3color::Color;
 use std::sync::Arc;
 
 fn main() {
-    let mode = 8;
+    let mode = 6;
     match mode {
         1 => checkered_spheres(),
         2 => earth(),
