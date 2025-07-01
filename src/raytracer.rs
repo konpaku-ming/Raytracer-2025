@@ -148,30 +148,4 @@ impl RayTracer {
 
         self.sketchpad.save();
     }
-
-    /*
-    pub fn render(&mut self) {
-        let progress = if option_env!("CI").unwrap_or_default() == "true" {
-            ProgressBar::hidden()
-        } else {
-            ProgressBar::new(self.height as u64)
-        };
-
-        let pixel_samples_scale = 1.0 / self.samples_per_pixel as f64;
-
-        for j in 0..self.height {
-            for i in 0..self.width {
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for _ in 0..self.samples_per_pixel {
-                    let r = self.camera.get_ray(i, j);
-                    pixel_color += self.ray_color(&r, self.max_depth);
-                }
-                self.sketchpad.draw(i, j, pixel_color * pixel_samples_scale);
-            }
-            progress.inc(1);
-        }
-        progress.finish();
-        self.sketchpad.save();
-    }
-    */
 }
