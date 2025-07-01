@@ -6,6 +6,7 @@ use crate::sketchpad::Sketchpad;
 use crate::vec3::{Point3, Vec3, cross, unit_vector};
 use crate::vec3color::Color;
 use indicatif::{ProgressBar, ProgressStyle};
+
 use rayon::prelude::*;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};

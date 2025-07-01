@@ -1,12 +1,8 @@
 use crate::vec3::{Vec3, dot, unit_vector};
-use once_cell::sync::Lazy;
-use rand::{Rng, SeedableRng, rngs::SmallRng};
-use std::sync::Mutex;
-
-static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(SmallRng::seed_from_u64(42)));
+use rand::{Rng, rng};
 
 pub fn random_double() -> f64 {
-    RNG.lock().unwrap().random_range(0.0..1.0)
+    rng().random_range(0.0..1.0)
 }
 
 pub fn random_double_range(min: f64, max: f64) -> f64 {
