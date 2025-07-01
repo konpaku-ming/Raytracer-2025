@@ -10,6 +10,7 @@ pub struct Camera {
     defocus_angle: f64,
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
+    recip_sqrt_spp: f64,
 }
 
 impl Camera {
@@ -19,6 +20,7 @@ impl Camera {
         pixel_delta_v: Vec3,
         pixel00_loc: Vec3,
         (defocus_angle, defocus_disk_u, defocus_disk_v): (f64, Vec3, Vec3),
+        recip_sqrt_spp: f64,
     ) -> Self {
         Self {
             ctr: center,
@@ -28,6 +30,7 @@ impl Camera {
             defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
+            recip_sqrt_spp,
         }
     }
 
@@ -40,9 +43,15 @@ impl Camera {
         Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
     }
 
-    pub fn get_ray(&self, i: u32, j: u32) -> Ray {
+    fn sample_square_stratified(&self, s_i: u32, s_j: u32) -> Vec3 {
+        let px = ((s_i as f64 + random_double()) * self.recip_sqrt_spp) - 0.5;
+        let py = ((s_j as f64 + random_double()) * self.recip_sqrt_spp) - 0.5;
+        Vec3::new(px, py, 0.0)
+    }
+
+    pub fn get_ray(&self, i: u32, j: u32, s_i: u32, s_j: u32) -> Ray {
         //向指定位置发射一条光线
-        let offset = self.sample_square(); //小范围内随机取样
+        let offset = self.sample_square_stratified(s_i, s_j); //小范围内随机取样
         let pixel_sample = self.pixel00_loc
             + ((i as f64 + offset.x()) * self.pixel_delta_u)
             + ((j as f64 + offset.y()) * self.pixel_delta_v);
