@@ -5,7 +5,10 @@ use crate::ray::Ray;
 use crate::sketchpad::Sketchpad;
 use crate::vec3::{Point3, Vec3, cross, unit_vector};
 use crate::vec3color::Color;
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressStyle};
+use rayon::prelude::*;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub struct RayTracer {
     sketchpad: Sketchpad,
@@ -96,6 +99,58 @@ impl RayTracer {
     }
 
     pub fn render(&mut self) {
+        let width = self.width;
+        let height = self.height;
+        let samples_per_pixel = self.samples_per_pixel;
+        let max_depth = self.max_depth;
+        let pixel_samples_scale = 1.0 / samples_per_pixel as f64;
+
+        let total_pixels = width * height;
+        let progress = Arc::new(AtomicUsize::new(0));
+        let mut pixels = vec![Color::new(0.0, 0.0, 0.0); total_pixels as usize];
+
+        // 初始化进度条
+        let pb = ProgressBar::new(total_pixels as u64);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("渲染中: [{bar:40.cyan/blue}] {percent}% | {pos}/{len} 像素")
+                .unwrap()
+                .progress_chars("##-"),
+        );
+
+        pixels
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(index, pixel)| {
+                let x = index as u32 % width;
+                let y = index as u32 / width;
+
+                let mut color = Color::new(0.0, 0.0, 0.0);
+                for _ in 0..samples_per_pixel {
+                    let ray = self.camera.get_ray(x, y);
+                    color += self.ray_color(&ray, max_depth);
+                }
+                *pixel = color * pixel_samples_scale;
+
+                progress.fetch_add(1, Ordering::Relaxed);
+                pb.set_position(progress.load(Ordering::Relaxed) as u64);
+            });
+
+        pb.finish_with_message("渲染完成！");
+
+        // 将结果写入 sketchpad
+        for y in 0..height {
+            for x in 0..width {
+                let idx = y * width + x;
+                self.sketchpad.draw(x, y, pixels[idx as usize]);
+            }
+        }
+
+        self.sketchpad.save();
+    }
+
+    /*
+    pub fn render(&mut self) {
         let progress = if option_env!("CI").unwrap_or_default() == "true" {
             ProgressBar::hidden()
         } else {
@@ -118,4 +173,5 @@ impl RayTracer {
         progress.finish();
         self.sketchpad.save();
     }
+    */
 }

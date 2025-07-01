@@ -3,7 +3,7 @@ use crate::interval::Interval;
 use crate::material::{DummyMaterial, Material};
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3, dot};
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub fn degrees_to_radians(degrees: f64) -> f64 {
     degrees * std::f64::consts::PI / 180.0
@@ -15,7 +15,7 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material>,
     pub u: f64,
     pub v: f64,
 }
@@ -27,7 +27,7 @@ impl Default for HitRecord {
             normal: Vec3::default(),
             t: 0.0,
             front_face: true,
-            mat: Rc::new(DummyMaterial {}),
+            mat: Arc::new(DummyMaterial {}),
             u: 0.0,
             v: 0.0,
         }
@@ -49,7 +49,7 @@ impl HitRecord {
             pos,
             normal,
             front_face,
-            mat: Rc::new(DummyMaterial {}),
+            mat: Arc::new(DummyMaterial {}),
             u: 0.0,
             v: 0.0,
         }
@@ -65,7 +65,7 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable {
+pub trait Hittable: Send + Sync {
     fn hit(&self, ray: &Ray, interval: Interval, hit_record: &mut HitRecord) -> bool;
 
     fn bounding_box(&self) -> Aabb;
@@ -73,12 +73,12 @@ pub trait Hittable {
 
 #[derive(Default)]
 pub struct HittableList {
-    pub objects: Vec<Rc<dyn Hittable>>,
+    pub objects: Vec<Arc<dyn Hittable>>,
     bbox: Aabb,
 }
 
 impl HittableList {
-    pub fn add(&mut self, object: Rc<dyn Hittable>) {
+    pub fn add(&mut self, object: Arc<dyn Hittable>) {
         self.bbox = Aabb::from_box(self.bbox, object.bounding_box());
         self.objects.push(object);
     }

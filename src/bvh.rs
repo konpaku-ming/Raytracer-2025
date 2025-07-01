@@ -3,11 +3,11 @@ use crate::hit_checker::{HitRecord, Hittable, HittableList};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use std::cmp::Ordering;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct BvhNode {
-    left: Rc<dyn Hittable>,
-    right: Rc<dyn Hittable>,
+    left: Arc<dyn Hittable>,
+    right: Arc<dyn Hittable>,
     bbox: Aabb,
 }
 
@@ -17,9 +17,9 @@ impl BvhNode {
         BvhNode::from_range(&mut list.objects, 0, len)
     }
 
-    pub fn from_range(objects: &mut Vec<Rc<dyn Hittable>>, start: usize, end: usize) -> Self {
-        let left: Rc<dyn Hittable>;
-        let right: Rc<dyn Hittable>;
+    pub fn from_range(objects: &mut Vec<Arc<dyn Hittable>>, start: usize, end: usize) -> Self {
+        let left: Arc<dyn Hittable>;
+        let right: Arc<dyn Hittable>;
 
         let mut bbox = Aabb::EMPTY;
 
@@ -44,15 +44,17 @@ impl BvhNode {
             _ => {
                 objects[start..end].sort_by(comparator);
                 let mid = start + object_span / 2;
-                left = Rc::new(BvhNode::from_range(objects, start, mid));
-                right = Rc::new(BvhNode::from_range(objects, mid, end));
+                left = Arc::new(BvhNode::from_range(objects, start, mid));
+                right = Arc::new(BvhNode::from_range(objects, mid, end));
             }
         }
 
         Self { left, right, bbox }
     }
 
-    fn box_compare(axis_index: usize) -> impl Fn(&Rc<dyn Hittable>, &Rc<dyn Hittable>) -> Ordering {
+    fn box_compare(
+        axis_index: usize,
+    ) -> impl Fn(&Arc<dyn Hittable>, &Arc<dyn Hittable>) -> Ordering {
         move |a, b| {
             let box1 = a.bounding_box();
             let box2 = b.bounding_box();
