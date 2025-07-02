@@ -7,6 +7,9 @@ use crate::vec3color::Color;
 use std::sync::Arc;
 
 pub trait Material: Send + Sync {
+    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
+        0.0
+    }
     fn scatter(
         &self,
         _r_in: &Ray,
@@ -44,6 +47,15 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
+    fn scattering_pdf(&self, _r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        let cos_theta = dot(&rec.normal, &unit_vector(scattered.direction()));
+        if cos_theta < 0.0 {
+            0.0
+        } else {
+            cos_theta / std::f64::consts::PI
+        }
+    }
+
     fn scatter(
         &self,
         r_in: &Ray,
