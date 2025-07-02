@@ -3,10 +3,11 @@ use crate::hit_checker::{HitRecord, Hittable, HittableList, degrees_to_radians};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::sketchpad::Sketchpad;
-use crate::vec3::{Point3, Vec3, cross, unit_vector};
+use crate::vec3::{Point3, Vec3, cross, dot, unit_vector};
 use crate::vec3color::Color;
 use indicatif::{ProgressBar, ProgressStyle};
 
+use crate::random::random_double_range;
 use rayon::prelude::*;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -93,16 +94,37 @@ impl RayTracer {
         {
             let mut scattered = Ray::default();
             let mut attenuation = Color::default();
-            let mut pdf = 0.0;
+            let mut pdf_value = 0.0;
             let color_from_emission = rec.mat.emitted(rec.u, rec.v, &rec.pos);
             if !rec
                 .mat
-                .scatter(ray, &rec, &mut attenuation, &mut scattered, &mut pdf)
+                .scatter(ray, &rec, &mut attenuation, &mut scattered, &mut pdf_value)
             {
                 return color_from_emission;
             }
+
+            let on_light = Vec3::new(
+                random_double_range(213.0, 343.0),
+                554.0,
+                random_double_range(227.0, 332.0),
+            );
+            let to_light = on_light - rec.pos;
+            let distance_squared = to_light.length_squared();
+            let to_light = unit_vector(&to_light);
+
+            if dot(&to_light, &rec.normal) < 0.0 {
+                return color_from_emission;
+            }
+            let light_area = (343.0 - 213.0) * (332.0 - 227.0);
+            let light_cosine = to_light.y().abs();
+            if light_cosine < 0.000001 {
+                return color_from_emission;
+            }
+
+            pdf_value = distance_squared / (light_cosine * light_area);
+            scattered = Ray::new_with_time(rec.pos, to_light, ray.time());
             let scattering_pdf = rec.mat.scattering_pdf(ray, &rec, &scattered);
-            let pdf_value = scattering_pdf;
+
             let color_from_scatter =
                 (attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1)) / pdf_value;
             return color_from_emission + color_from_scatter;

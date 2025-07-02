@@ -260,7 +260,7 @@ fn cornell_smoke() {
 fn cornell_box() {
     let aspect_ratio = 1.0;
     let image_width = 600;
-    let samples_per_pixel = 1000;
+    let samples_per_pixel = 10;
     let max_depth = 50;
     let v_fov = 40.0;
     let look_from = Point3::new(278.0, 278.0, -800.0);
