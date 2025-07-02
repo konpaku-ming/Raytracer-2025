@@ -94,11 +94,14 @@ impl RayTracer {
             let mut scattered = Ray::default();
             let mut attenuation = Color::default();
             let color_from_emission = rec.mat.emitted(rec.u, rec.v, &rec.pos);
-            return if rec.mat.scatter(ray, &rec, &mut attenuation, &mut scattered) {
-                attenuation * self.ray_color(&scattered, depth - 1) + color_from_emission
-            } else {
-                color_from_emission
-            };
+            if !rec.mat.scatter(ray, &rec, &mut attenuation, &mut scattered) {
+                return color_from_emission;
+            }
+            let scattering_pdf = rec.mat.scattering_pdf(ray, &rec, &scattered);
+            let pdf_value = 1.0 / (2.0 * std::f64::consts::PI);
+            let color_from_scatter =
+                (attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1)) / pdf_value;
+            return color_from_emission + color_from_scatter;
         }
         self.background
     }
