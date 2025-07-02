@@ -93,8 +93,12 @@ impl RayTracer {
         {
             let mut scattered = Ray::default();
             let mut attenuation = Color::default();
+            let mut pdf = 0.0;
             let color_from_emission = rec.mat.emitted(rec.u, rec.v, &rec.pos);
-            if !rec.mat.scatter(ray, &rec, &mut attenuation, &mut scattered) {
+            if !rec
+                .mat
+                .scatter(ray, &rec, &mut attenuation, &mut scattered, &mut pdf)
+            {
                 return color_from_emission;
             }
             let scattering_pdf = rec.mat.scattering_pdf(ray, &rec, &scattered);
