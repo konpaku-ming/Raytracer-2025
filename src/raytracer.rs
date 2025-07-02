@@ -98,7 +98,7 @@ impl RayTracer {
                 return color_from_emission;
             }
             let scattering_pdf = rec.mat.scattering_pdf(ray, &rec, &scattered);
-            let pdf_value = 1.0 / (2.0 * std::f64::consts::PI);
+            let pdf_value = scattering_pdf;
             let color_from_scatter =
                 (attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1)) / pdf_value;
             return color_from_emission + color_from_scatter;
