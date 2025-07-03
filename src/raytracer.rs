@@ -1,7 +1,7 @@
 use crate::camera::Camera;
 use crate::hit_checker::{HitRecord, Hittable, HittableList, degrees_to_radians};
 use crate::interval::Interval;
-use crate::pdf::{CosinePdf, Pdf};
+use crate::pdf::{HittablePdf, Pdf};
 use crate::ray::Ray;
 use crate::sketchpad::Sketchpad;
 use crate::vec3::{Point3, Vec3, cross, unit_vector};
@@ -81,7 +81,7 @@ impl RayTracer {
         }
     }
 
-    pub fn ray_color(&self, ray: &Ray, depth: i32) -> Color {
+    pub fn ray_color(&self, ray: &Ray, depth: i32, lights: Arc<dyn Hittable>) -> Color {
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
@@ -102,20 +102,22 @@ impl RayTracer {
                 return color_from_emission;
             }
 
-            let surface_pdf = CosinePdf::new(&rec.normal);
-            let scattered = Ray::new_with_time(rec.pos, surface_pdf.generate(), ray.time());
-            pdf_value = surface_pdf.value(*scattered.direction());
+            let light_pdf = HittablePdf::new(lights.clone(), rec.pos);
+            let scattered = Ray::new_with_time(rec.pos, light_pdf.generate(), ray.time());
+            pdf_value = light_pdf.value(*scattered.direction());
 
             let scattering_pdf = rec.mat.scattering_pdf(ray, &rec, &scattered);
 
-            let color_from_scatter =
-                (attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1)) / pdf_value;
+            let color_from_scatter = (attenuation
+                * scattering_pdf
+                * self.ray_color(&scattered, depth - 1, lights.clone()))
+                / pdf_value;
             return color_from_emission + color_from_scatter;
         }
         self.background
     }
 
-    pub fn render(&mut self) {
+    pub fn render(&mut self, lights: Arc<dyn Hittable>) {
         let width = self.width;
         let height = self.height;
         let samples_per_pixel = self.samples_per_pixel;
@@ -149,7 +151,7 @@ impl RayTracer {
                 for s_j in 0..sqrt_spp {
                     for s_i in 0..sqrt_spp {
                         let r = self.camera.get_ray(x, y, s_i, s_j);
-                        color += self.ray_color(&r, max_depth);
+                        color += self.ray_color(&r, max_depth, lights.clone());
                     }
                 }
                 *pixel = color * pixel_samples_scale;
