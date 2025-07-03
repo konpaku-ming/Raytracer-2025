@@ -2,11 +2,13 @@ use crate::aabb::Aabb;
 use crate::hit_checker::{HitRecord, Hittable, HittableList, degrees_to_radians};
 use crate::interval::Interval;
 use crate::material::{Isotropic, Material};
-use crate::random::{random_double, random_double_range};
+use crate::onb::ONB;
+use crate::random::{random_double, random_double_range, random_to_sphere};
 use crate::ray::Ray;
 use crate::texture::Texture;
 use crate::vec3::{Point3, Vec3, cross, dot, unit_vector};
 use crate::vec3color::Color;
+use std::f64::consts::PI;
 use std::sync::Arc;
 
 pub struct Sphere {
@@ -47,9 +49,9 @@ impl Sphere {
 
     pub fn get_sphere_uv(p: &Vec3) -> (f64, f64) {
         let theta = (-p.y()).acos();
-        let phi = (-p.z()).atan2(p.x()) + std::f64::consts::PI;
-        let u = phi / (2.0 * std::f64::consts::PI);
-        let v = theta / std::f64::consts::PI;
+        let phi = (-p.z()).atan2(p.x()) + PI;
+        let u = phi / (2.0 * PI);
+        let v = theta / PI;
         (u, v)
     }
 }
@@ -85,6 +87,29 @@ impl Hittable for Sphere {
 
     fn bounding_box(&self) -> Aabb {
         self.bbox
+    }
+
+    fn pdf_value(&self, origin: Point3, direction: Vec3) -> f64 {
+        // 静态球体的 PDF 实现
+        let ray = Ray::new(origin, direction);
+        let mut rec = HitRecord::default();
+
+        if !self.hit(&ray, Interval::new(0.001, f64::INFINITY), &mut rec) {
+            return 0.0;
+        }
+
+        let dist_squared = (self.center.at(0.0) - origin).length_squared();
+        let cos_theta_max = (1.0 - self.radius * self.radius / dist_squared).sqrt();
+        let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);
+
+        1.0 / solid_angle
+    }
+
+    fn random(&self, origin: Point3) -> Vec3 {
+        let direction = self.center.at(0.0) - origin;
+        let distance_squared = direction.length_squared();
+        let uvw = ONB::new(&direction);
+        uvw.transform(random_to_sphere(self.radius, distance_squared))
     }
 }
 

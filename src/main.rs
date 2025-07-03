@@ -1,7 +1,7 @@
 use raytracer::bvh::BvhNode;
 use raytracer::hit_checker::HittableList;
-use raytracer::material::{DiffuseLight, DummyMaterial, Lambertian, Metal};
-use raytracer::modeling::{Quad, RotateY, Translate, make_box};
+use raytracer::material::{Dielectric, DiffuseLight, DummyMaterial, Lambertian};
+use raytracer::modeling::{Quad, RotateY, Sphere, Translate, make_box};
 use raytracer::raytracer::RayTracer;
 use raytracer::vec3::{Point3, Vec3};
 use raytracer::vec3color::Color;
@@ -30,7 +30,8 @@ fn cornell_box() {
     let white = Arc::new(Lambertian::new(Color::new(0.73, 0.73, 0.73)));
     let green = Arc::new(Lambertian::new(Color::new(0.12, 0.45, 0.15)));
     let light = Arc::new(DiffuseLight::new(Color::new(15.0, 15.0, 15.0)));
-    let aluminum = Arc::new(Metal::new(Color::new(0.8, 0.85, 0.88), 0.0));
+    //let aluminum = Arc::new(Metal::new(Color::new(0.8, 0.85, 0.88), 0.0));
+    let glass = Arc::new(Dielectric::new(1.5));
 
     let empty_material = Arc::new(DummyMaterial);
     let lights = Quad::new(
@@ -80,20 +81,17 @@ fn cornell_box() {
     let box1 = make_box(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 330.0, 165.0),
-        aluminum.clone(),
+        white.clone(),
     );
     let box1 = Arc::new(RotateY::new(box1, 15.0));
     let box1 = Arc::new(Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)));
     world.add(box1);
 
-    let box2 = make_box(
-        Point3::new(0.0, 0.0, 0.0),
-        Point3::new(165.0, 165.0, 165.0),
-        white.clone(),
-    );
-    let box2 = Arc::new(RotateY::new(box2, -18.0));
-    let box2 = Arc::new(Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)));
-    world.add(box2);
+    world.add(Arc::new(Sphere::new(
+        Point3::new(190.0, 90.0, 190.0),
+        90.0,
+        glass,
+    )));
 
     let bvh = BvhNode::from_list(&mut world);
     let mut world = HittableList::default();
