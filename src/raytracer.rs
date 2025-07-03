@@ -1,7 +1,7 @@
 use crate::camera::Camera;
 use crate::hit_checker::{HitRecord, Hittable, HittableList, degrees_to_radians};
 use crate::interval::Interval;
-use crate::pdf::{HittablePdf, Pdf};
+use crate::pdf::{CosinePdf, HittablePdf, MixturePdf, Pdf};
 use crate::ray::Ray;
 use crate::sketchpad::Sketchpad;
 use crate::vec3::{Point3, Vec3, cross, unit_vector};
@@ -102,9 +102,12 @@ impl RayTracer {
                 return color_from_emission;
             }
 
-            let light_pdf = HittablePdf::new(lights.clone(), rec.pos);
-            let scattered = Ray::new_with_time(rec.pos, light_pdf.generate(), ray.time());
-            pdf_value = light_pdf.value(*scattered.direction());
+            let p0 = Arc::new(HittablePdf::new(lights.clone(), rec.pos));
+            let p1 = Arc::new(CosinePdf::new(&rec.normal));
+            let mixed_pdf = MixturePdf::new(p0, p1);
+
+            let scattered = Ray::new_with_time(rec.pos, mixed_pdf.generate(), ray.time());
+            pdf_value = mixed_pdf.value(*scattered.direction());
 
             let scattering_pdf = rec.mat.scattering_pdf(ray, &rec, &scattered);
 
