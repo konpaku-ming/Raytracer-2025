@@ -29,7 +29,7 @@ impl Sketchpad {
     }
 
     pub fn save(&self) {
-        let path = std::path::Path::new("output/book3/image7.png");
+        let path = std::path::Path::new("output/book3/image8.png");
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
         println!(
