@@ -1,7 +1,8 @@
 use crate::camera::Camera;
 use crate::hit_checker::{HitRecord, Hittable, HittableList, degrees_to_radians};
 use crate::interval::Interval;
-use crate::pdf::{CosinePdf, HittablePdf, MixturePdf, Pdf};
+use crate::material::ScatterRecord;
+use crate::pdf::{HittablePdf, MixturePdf, Pdf};
 use crate::ray::Ray;
 use crate::sketchpad::Sketchpad;
 use crate::vec3::{Point3, Vec3, cross, unit_vector};
@@ -91,27 +92,26 @@ impl RayTracer {
             .hittable_list
             .hit(ray, Interval::new(0.001, f64::INFINITY), &mut rec)
         {
-            let mut scattered = Ray::default();
-            let mut attenuation = Color::default();
-            let mut pdf_value = 0.0;
+            let mut s_rec = ScatterRecord::default();
             let color_from_emission = rec.mat.emitted(ray, &rec, rec.u, rec.v, &rec.pos);
-            if !rec
-                .mat
-                .scatter(ray, &rec, &mut attenuation, &mut scattered, &mut pdf_value)
-            {
+            if !rec.mat.scatter(ray, &rec, &mut s_rec) {
                 return color_from_emission;
             }
 
-            let p0 = Arc::new(HittablePdf::new(lights.clone(), rec.pos));
-            let p1 = Arc::new(CosinePdf::new(&rec.normal));
-            let mixed_pdf = MixturePdf::new(p0, p1);
+            if s_rec.skip_pdf {
+                return s_rec.attenuation
+                    * self.ray_color(&s_rec.skip_pdf_ray, depth - 1, lights.clone());
+            }
+
+            let light_ptr = Arc::new(HittablePdf::new(lights.clone(), rec.pos));
+            let mixed_pdf = MixturePdf::new(light_ptr, s_rec.pdf_ptr);
 
             let scattered = Ray::new_with_time(rec.pos, mixed_pdf.generate(), ray.time());
-            pdf_value = mixed_pdf.value(*scattered.direction());
+            let pdf_value = mixed_pdf.value(*scattered.direction());
 
             let scattering_pdf = rec.mat.scattering_pdf(ray, &rec, &scattered);
 
-            let color_from_scatter = (attenuation
+            let color_from_scatter = (s_rec.attenuation
                 * scattering_pdf
                 * self.ray_color(&scattered, depth - 1, lights.clone()))
                 / pdf_value;
