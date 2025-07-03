@@ -1,6 +1,6 @@
 use crate::hit_checker::HitRecord;
-use crate::onb::ONB;
-use crate::random::{random_cosine_direction, random_double, random_unit_vector};
+use crate::pdf::{CosinePdf, DummyPdf, Pdf, SpherePdf};
+use crate::random::{random_double, random_unit_vector};
 use crate::ray::Ray;
 use crate::texture::{SolidColor, Texture};
 use crate::vec3::{Point3, Vec3, dot, unit_vector};
@@ -8,18 +8,29 @@ use crate::vec3color::Color;
 use std::f64::consts::PI;
 use std::sync::Arc;
 
+pub struct ScatterRecord {
+    pub attenuation: Color,
+    pub pdf_ptr: Arc<dyn Pdf>,
+    pub skip_pdf: bool,
+    pub skip_pdf_ray: Ray,
+}
+
+impl Default for ScatterRecord {
+    fn default() -> Self {
+        Self {
+            attenuation: Color::default(),
+            pdf_ptr: Arc::new(DummyPdf),
+            skip_pdf: false,
+            skip_pdf_ray: Ray::default(),
+        }
+    }
+}
+
 pub trait Material: Send + Sync {
     fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
         0.0
     }
-    fn scatter(
-        &self,
-        _r_in: &Ray,
-        _rec: &HitRecord,
-        _attenuation: &mut Color,
-        _scattered: &mut Ray,
-        _pdf: &mut f64,
-    ) -> bool {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _s_rec: &mut ScatterRecord) -> bool {
         false
     }
 
@@ -50,23 +61,15 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
-        1.0 / (2.0 * PI)
+    fn scattering_pdf(&self, _r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        let cos_theta = dot(&rec.normal, &unit_vector(scattered.direction()));
+        if cos_theta < 0.0 { 0.0 } else { cos_theta / PI }
     }
 
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-        pdf: &mut f64,
-    ) -> bool {
-        let uvw = ONB::new(&rec.normal);
-        let scatter_direction = uvw.transform(random_cosine_direction());
-        *scattered = Ray::new_with_time(rec.pos, unit_vector(&scatter_direction), r_in.time());
-        *attenuation = self.tex.value(rec.u, rec.v, &rec.pos);
-        *pdf = dot(&uvw.w(), scattered.direction()) / PI;
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord, s_rec: &mut ScatterRecord) -> bool {
+        s_rec.attenuation = self.tex.value(rec.u, rec.v, &rec.pos);
+        s_rec.pdf_ptr = Arc::new(CosinePdf::new(&rec.normal));
+        s_rec.skip_pdf = false;
         true
     }
 }
@@ -86,19 +89,15 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-        _pdf: &mut f64,
-    ) -> bool {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, s_rec: &mut ScatterRecord) -> bool {
         let mut reflected = Vec3::reflect(r_in.direction(), &rec.normal);
         reflected = unit_vector(&reflected) + (self.fuzz * random_unit_vector());
-        *scattered = Ray::new_with_time(rec.pos, reflected, r_in.time());
-        *attenuation = self.albedo;
-        dot(scattered.direction(), &rec.normal) > 0.0
+
+        s_rec.attenuation = self.albedo;
+        s_rec.pdf_ptr = Arc::new(DummyPdf);
+        s_rec.skip_pdf = true;
+        s_rec.skip_pdf_ray = Ray::new_with_time(rec.pos, reflected, r_in.time());
+        true
     }
 }
 
@@ -119,30 +118,28 @@ fn reflectance(cosine: f64, refraction_index: f64) -> f64 {
 }
 
 impl Material for Dielectric {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-        _pdf: &mut f64,
-    ) -> bool {
-        *attenuation = Color::new(1.0, 1.0, 1.0);
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, s_rec: &mut ScatterRecord) -> bool {
+        s_rec.attenuation = Color::new(1.0, 1.0, 1.0);
+        s_rec.pdf_ptr = Arc::new(DummyPdf);
+        s_rec.skip_pdf = true;
+
         let ri = if rec.front_face {
             1.0 / self.refraction_index
         } else {
             self.refraction_index
         };
+
         let unit_direction = unit_vector(r_in.direction());
         let cos_theta = dot(&-unit_direction, &rec.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
         let cannot_refract = ri * sin_theta > 1.0; //全反射
+
         let direction = if cannot_refract || reflectance(cos_theta, ri) > random_double() {
             Vec3::reflect(&unit_direction, &rec.normal)
         } else {
             Vec3::refract(&unit_direction, &rec.normal, ri)
         };
-        *scattered = Ray::new_with_time(rec.pos, direction, r_in.time());
+        s_rec.skip_pdf_ray = Ray::new_with_time(rec.pos, direction, r_in.time());
         true
     }
 }
@@ -194,17 +191,10 @@ impl Material for Isotropic {
         1.0 / (4.0 * PI)
     }
 
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-        pdf: &mut f64,
-    ) -> bool {
-        *scattered = Ray::new_with_time(rec.pos, random_unit_vector(), r_in.time());
-        *attenuation = self.tex.value(rec.u, rec.v, &rec.pos);
-        *pdf = 1.0 / (4.0 * PI);
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord, s_rec: &mut ScatterRecord) -> bool {
+        s_rec.attenuation = self.tex.value(rec.u, rec.v, &rec.pos);
+        s_rec.pdf_ptr = Arc::new(SpherePdf::new());
+        s_rec.skip_pdf = false;
         true
     }
 }
