@@ -2,7 +2,7 @@ use crate::aabb::Aabb;
 use crate::hit_checker::{HitRecord, Hittable, HittableList, degrees_to_radians};
 use crate::interval::Interval;
 use crate::material::{Isotropic, Material};
-use crate::random::random_double_range;
+use crate::random::{random_double, random_double_range};
 use crate::ray::Ray;
 use crate::texture::Texture;
 use crate::vec3::{Point3, Vec3, cross, dot, unit_vector};
@@ -92,11 +92,12 @@ pub struct Quad {
     q: Point3,
     u: Vec3,
     v: Vec3,
+    w: Vec3,
     mat: Arc<dyn Material + Send + Sync>,
     bbox: Aabb,
     normal: Vec3,
     d: f64,
-    w: Vec3,
+    area: f64,
 }
 
 impl Quad {
@@ -109,11 +110,12 @@ impl Quad {
             q,
             u,
             v,
+            w,
             mat,
             bbox: Aabb::default(),
             normal,
             d,
-            w,
+            area: n.length(),
         };
         quad.set_bounding_box();
         quad
@@ -162,6 +164,25 @@ impl Hittable for Quad {
 
     fn bounding_box(&self) -> Aabb {
         self.bbox
+    }
+
+    fn pdf_value(&self, origin: Point3, direction: Vec3) -> f64 {
+        let mut rec = HitRecord::default();
+        if !self.hit(
+            &Ray::new(origin, direction),
+            Interval::new(0.001, f64::INFINITY),
+            &mut rec,
+        ) {
+            return 0.0;
+        }
+        let distance_squared = rec.t * rec.t * direction.length_squared();
+        let cosine = (dot(&direction, &rec.normal) / direction.length()).abs();
+        distance_squared / (cosine * self.area)
+    }
+
+    fn random(&self, origin: Vec3) -> Vec3 {
+        let p = self.q + (random_double() * self.u) + (random_double() * self.v);
+        p - origin
     }
 }
 
