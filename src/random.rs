@@ -30,6 +30,18 @@ pub fn random_range(min: f64, max: f64) -> Vec3 {
     }
 }
 
+pub fn random_to_sphere(radius: f64, distance_squared: f64) -> Vec3 {
+    let r1 = random_double();
+    let r2 = random_double();
+
+    let z = 1.0 + r2 * ((1.0 - radius * radius / distance_squared).sqrt() - 1.0);
+    let phi = 2.0 * PI * r1;
+    let x = phi.cos() * (1.0 - z * z).sqrt();
+    let y = phi.sin() * (1.0 - z * z).sqrt();
+
+    Vec3::new(x, y, z)
+}
+
 pub fn random_unit_vector() -> Vec3 {
     loop {
         let p = random_range(-1.0, 1.0);
