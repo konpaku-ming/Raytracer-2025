@@ -1,6 +1,7 @@
 use crate::aabb::Aabb;
 use crate::interval::Interval;
 use crate::material::{DummyMaterial, Material};
+use crate::random::random_int_range;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3, dot};
 use std::sync::Arc;
@@ -113,5 +114,19 @@ impl Hittable for HittableList {
 
     fn bounding_box(&self) -> Aabb {
         self.bbox
+    }
+
+    fn pdf_value(&self, origin: Point3, direction: Vec3) -> f64 {
+        let weight = 1.0 / self.objects.len() as f64;
+        self.objects
+            .iter()
+            .map(|object| weight * object.pdf_value(origin, direction))
+            .sum()
+    }
+
+    fn random(&self, origin: Point3) -> Vec3 {
+        let int_size = self.objects.len() as i32;
+        let index = random_int_range(0, int_size - 1) as usize;
+        self.objects[index].random(origin)
     }
 }
