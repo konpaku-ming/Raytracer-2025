@@ -7,6 +7,7 @@ pub mod material;
 pub mod modeling;
 pub mod my_image;
 pub mod onb;
+pub mod pdf;
 pub mod perlin;
 pub mod random;
 pub mod ray;
