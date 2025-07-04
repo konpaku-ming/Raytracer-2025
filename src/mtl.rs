@@ -22,14 +22,14 @@ pub fn parse_mtl_file(path: &str) -> HashMap<String, MtlInfo> {
         map_d: None,
     };
 
-    for line in reader.lines().filter_map(Result::ok) {
+    for line in reader.lines().map_while(Result::ok) {
         let line = line.trim();
         if line.is_empty() || line.starts_with('#') {
             continue;
         }
 
         let tokens: Vec<&str> = line.split_whitespace().collect();
-        match tokens.get(0).copied() {
+        match tokens.first().copied() {
             Some("newmtl") => {
                 if !current.name.is_empty() {
                     materials.insert(current.name.clone(), current);
