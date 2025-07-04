@@ -15,7 +15,7 @@ impl MyImage {
         let mut image = MyImage {
             image_width: 0,
             image_height: 0,
-            bytes_per_pixel: 3,
+            bytes_per_pixel: 4,
             bytes_per_scanline: 0,
             b_data: None,
         };
@@ -57,7 +57,7 @@ impl MyImage {
         };
 
         let img = match reader.decode() {
-            Ok(img) => img.to_rgb8(),
+            Ok(img) => img.to_rgba8(),
             Err(e) => {
                 eprintln!("图像解码失败 {:?}: {}", path, e);
                 return false;
@@ -87,17 +87,22 @@ impl MyImage {
         }
     }
 
-    pub fn pixel_data(&self, x: usize, y: usize) -> &[u8; 3] {
-        static MAGENTA: [u8; 3] = [255, 0, 255];
+    pub fn pixel_rgba(&self, x: usize, y: usize) -> [u8; 4] {
+        static MAGENTA: [u8; 4] = [255, 0, 255, 255];
         if let Some(data) = &self.b_data {
             let x = Self::clamp(x, 0, self.image_width);
             let y = Self::clamp(y, 0, self.image_height);
             let index = y * self.bytes_per_scanline + x * self.bytes_per_pixel;
-            if index + 2 < data.len() {
-                return unsafe { &*(data[index..index + 3].as_ptr() as *const [u8; 3]) };
+            if index + 3 < data.len() {
+                return [
+                    data[index],
+                    data[index + 1],
+                    data[index + 2],
+                    data[index + 3],
+                ];
             }
         }
-        &MAGENTA
+        MAGENTA
     }
 
     fn clamp(x: usize, low: usize, high: usize) -> usize {
