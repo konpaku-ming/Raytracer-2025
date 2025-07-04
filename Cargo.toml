@@ -7,6 +7,7 @@ edition = "2024"
 path = "src/library.rs"
 
 [dependencies]
+tobj = "3.2.5"
 rayon = "1.10.0"
 image = "0.25.6"
 console = "0.16.0"
