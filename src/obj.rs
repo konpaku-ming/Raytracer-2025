@@ -1,11 +1,15 @@
 use crate::aabb::Aabb;
 use crate::hit_checker::{HitRecord, Hittable};
 use crate::interval::Interval;
-use crate::material::Material;
+use crate::material::{Lambertian, Material};
+use crate::mtl::{make_mapped_texture_from_mtl, parse_mtl_file};
 use crate::ray::Ray;
 use crate::uv::UV;
 use crate::vec3::{Point3, Vec3, cross, dot, unit_vector};
+use crate::vec3color::Color;
+use std::collections::HashMap;
 use std::sync::Arc;
+use tobj::{LoadOptions, load_obj};
 
 pub struct Triangle {
     v0: Point3,
@@ -123,4 +127,87 @@ impl Hittable for Triangle {
     fn bounding_box(&self) -> Aabb {
         self.bbox
     }
+}
+
+pub fn obj_loader(obj_path: &str, mtl_dir: &str) -> Vec<Triangle> {
+    // 加载 .obj 模型与材质列表
+    let (models, materials) = load_obj(
+        obj_path,
+        &LoadOptions {
+            triangulate: true,
+            single_index: true,
+            ..Default::default()
+        },
+    )
+    .expect("OBJ 加载失败");
+
+    let mut material_map = HashMap::new();
+
+    let mtl_path = format!("{}", mtl_dir);
+
+    if let Ok(parsed) = std::panic::catch_unwind(|| parse_mtl_file(&mtl_path)) {
+        for (_, info) in parsed {
+            let tex = Arc::new(make_mapped_texture_from_mtl(&info));
+            let mat = Arc::new(Lambertian::from_tex(tex));
+            material_map.insert(info.name.clone(), mat);
+        }
+    }
+
+    let mut triangles = Vec::new();
+
+    let materials = materials.unwrap();
+    for model in models {
+        let mesh = &model.mesh;
+        let positions = &mesh.positions;
+        let texcoords = &mesh.texcoords;
+        let indices = &mesh.indices;
+
+        let material = if let Some(mat_id) = mesh.material_id {
+            let tobj_material = materials.get(mat_id);
+            if let Some(mat) = tobj_material {
+                // 根据材质名在你的 material_map 中查找
+                if let Some(resolved) = material_map.get(&mat.name) {
+                    resolved.clone()
+                } else {
+                    Arc::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)))
+                }
+            } else {
+                Arc::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)))
+            }
+        } else {
+            Arc::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)))
+        };
+
+        for i in (0..indices.len()).step_by(3) {
+            let get_vertex = |j| {
+                let idx = indices[i + j] as usize;
+                Point3::new(
+                    positions[3 * idx] as f64,
+                    positions[3 * idx + 1] as f64,
+                    positions[3 * idx + 2] as f64,
+                )
+            };
+
+            let get_uv = |j| {
+                let idx = indices[i + j] as usize;
+                if texcoords.len() >= 2 * idx + 2 {
+                    UV::new(texcoords[2 * idx] as f64, texcoords[2 * idx + 1] as f64)
+                } else {
+                    UV::default()
+                }
+            };
+
+            let v0 = get_vertex(0);
+            let v1 = get_vertex(1);
+            let v2 = get_vertex(2);
+
+            let uv0 = get_uv(0);
+            let uv1 = get_uv(1);
+            let uv2 = get_uv(2);
+
+            triangles.push(Triangle::new(v0, v1, v2, uv0, uv1, uv2, material.clone()));
+        }
+    }
+
+    triangles
 }
