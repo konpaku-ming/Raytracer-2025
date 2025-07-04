@@ -12,8 +12,8 @@ impl ONB {
         } else {
             Vec3::new(1.0, 0.0, 0.0)
         };
-        let v = unit_vector(&cross(&w, &a));
-        let u = cross(&w, &v);
+        let u = unit_vector(&cross(&w, &a));
+        let v = cross(&w, &u);
         ONB { axis: [u, v, w] }
     }
 

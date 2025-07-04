@@ -1,11 +1,26 @@
 use crate::interval::Interval;
 use crate::my_image::MyImage;
 use crate::perlin::Perlin;
-use crate::vec3::Point3;
+use crate::vec3::{Point3, Vec3};
 use crate::vec3color::Color;
 use std::sync::Arc;
 pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
+
+    fn normal(
+        &self,
+        _u: f64,
+        _v: f64,
+        _geom_normal: Vec3,
+        _tangent: Vec3,
+        _bitangent: Vec3,
+    ) -> Option<Vec3> {
+        None
+    }
+
+    fn alpha(&self, _u: f64, _v: f64) -> Option<f64> {
+        None
+    }
 }
 
 pub struct SolidColor {
@@ -90,7 +105,7 @@ impl Texture for ImageTexture {
         let i = (u * self.image.width() as f64) as usize;
         let j = (v * self.image.height() as f64) as usize;
 
-        let pixel = self.image.pixel_data(i, j);
+        let pixel = self.image.pixel_rgba(i, j);
         let color_scale = 1.0 / 255.0;
 
         Color::new(
@@ -126,5 +141,96 @@ impl Texture for NoiseTexture {
 impl Default for NoiseTexture {
     fn default() -> Self {
         Self::new(1.0)
+    }
+}
+
+pub struct Mat3 {
+    cols: [Vec3; 3], //三个列向量：分别是 tangent, bitangent, normal
+}
+
+impl Mat3 {
+    pub fn from_cols(t: Vec3, b: Vec3, n: Vec3) -> Self {
+        Mat3 { cols: [t, b, n] }
+    }
+
+    pub fn mul_vec3(&self, v: Vec3) -> Vec3 {
+        self.cols[0] * v.x() + self.cols[1] * v.y() + self.cols[2] * v.z()
+    }
+}
+
+pub struct MappedTexture {
+    color_map: MyImage,          //颜色纹理
+    normal_map: Option<MyImage>, //法线贴图
+    alpha_map: Option<MyImage>,  //Alpha 通道
+}
+
+impl MappedTexture {
+    pub fn new(color_path: &str, normal_path: Option<&str>, alpha_path: Option<&str>) -> Self {
+        let color_map = MyImage::new(color_path);
+        let normal_map = normal_path.map(MyImage::new);
+        let alpha_map = alpha_path.map(MyImage::new);
+
+        Self {
+            color_map,
+            normal_map,
+            alpha_map,
+        }
+    }
+
+    pub fn get_uv(&self, u: f64, v: f64) -> (usize, usize) {
+        let u = Interval::new(0.0, 1.0).clamp(u);
+        let v = 1.0 - Interval::new(0.0, 1.0).clamp(v); // flip v
+
+        let i = (u * self.color_map.width() as f64) as usize;
+        let j = (v * self.color_map.height() as f64) as usize;
+        (i, j)
+    }
+}
+
+impl Texture for MappedTexture {
+    fn value(&self, u: f64, v: f64, _p: &Point3) -> Color {
+        if self.color_map.height() == 0 {
+            return Color::new(0.0, 1.0, 1.0);
+        }
+
+        let u = Interval::new(0.0, 1.0).clamp(u);
+        let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
+
+        let i = (u * self.color_map.width() as f64) as usize;
+        let j = (v * self.color_map.height() as f64) as usize;
+
+        let pixel = self.color_map.pixel_rgba(i, j);
+        let color_scale = 1.0 / 255.0;
+
+        Color::new(
+            color_scale * color_scale * (pixel[0] * pixel[0]) as f64,
+            color_scale * color_scale * (pixel[1] * pixel[1]) as f64,
+            color_scale * color_scale * (pixel[2] * pixel[2]) as f64,
+        )
+    }
+
+    fn normal(
+        &self,
+        u: f64,
+        v: f64,
+        geom_normal: Vec3,
+        tangent: Vec3,
+        bitangent: Vec3,
+    ) -> Option<Vec3> {
+        let map = self.normal_map.as_ref()?;
+        let u = Interval::new(0.0, 1.0).clamp(u);
+        let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
+
+        let i = (u * map.width() as f64) as usize;
+        let j = (v * map.height() as f64) as usize;
+        let pixel = map.pixel_rgba(i, j);
+
+        let nx = 2.0 * (pixel[0] as f64 / 255.0) - 1.0;
+        let ny = 2.0 * (pixel[1] as f64 / 255.0) - 1.0;
+        let nz = 2.0 * (pixel[2] as f64 / 255.0) - 1.0;
+
+        let tangent_space_normal = Vec3::new(nx, ny, nz);
+        let tbn = Mat3::from_cols(tangent, bitangent, geom_normal);
+        Some(tbn.mul_vec3(tangent_space_normal))
     }
 }
