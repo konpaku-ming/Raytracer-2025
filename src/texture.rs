@@ -179,7 +179,7 @@ impl MappedTexture {
 
     pub fn get_uv(&self, u: f64, v: f64) -> (usize, usize) {
         let u = Interval::new(0.0, 1.0).clamp(u);
-        let v = 1.0 - Interval::new(0.0, 1.0).clamp(v); // flip v
+        let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
 
         let i = (u * self.color_map.width() as f64) as usize;
         let j = (v * self.color_map.height() as f64) as usize;
@@ -202,11 +202,12 @@ impl Texture for MappedTexture {
         let pixel = self.color_map.pixel_rgba(i, j);
         let color_scale = 1.0 / 255.0;
 
-        Color::new(
-            color_scale * color_scale * (pixel[0] * pixel[0]) as f64,
-            color_scale * color_scale * (pixel[1] * pixel[1]) as f64,
-            color_scale * color_scale * (pixel[2] * pixel[2]) as f64,
-        )
+        let color = Color::new(
+            color_scale * pixel[0] as f64,
+            color_scale * pixel[1] as f64,
+            color_scale * pixel[2] as f64,
+        );
+        color * color
     }
 
     fn normal(

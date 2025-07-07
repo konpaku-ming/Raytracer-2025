@@ -28,6 +28,7 @@ impl MyImage {
         if let Some(dir) = image_dir {
             paths.push(PathBuf::from(dir).join(&filename));
         }
+        paths.push(PathBuf::from("assets").join(&filename));
         paths.push(PathBuf::from(&filename));
         paths.push(PathBuf::from("images").join(&filename));
 

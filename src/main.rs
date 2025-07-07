@@ -2,13 +2,18 @@ use raytracer::bvh::BvhNode;
 use raytracer::hit_checker::HittableList;
 use raytracer::material::{Dielectric, DiffuseLight, DummyMaterial, Lambertian};
 use raytracer::modeling::{Quad, RotateY, Sphere, Translate, make_box};
+use raytracer::obj::create_model;
 use raytracer::raytracer::RayTracer;
 use raytracer::vec3::{Point3, Vec3};
 use raytracer::vec3color::Color;
 use std::sync::Arc;
 
 fn main() {
-    cornell_box();
+    let op = 2;
+    match op {
+        1 => cornell_box(),
+        _ => koishi(),
+    }
 }
 
 fn cornell_box() {
@@ -102,6 +107,36 @@ fn cornell_box() {
     let bvh = BvhNode::from_list(&mut world);
     let mut world = HittableList::default();
     world.add(Arc::new(bvh));
+
+    let mut raytracer = RayTracer::new(
+        (aspect_ratio, image_width),
+        (look_from, look_at, vup, v_fov),
+        world,
+        samples_per_pixel,
+        max_depth,
+        (defocus_angle, focus_dist),
+        background,
+    );
+    raytracer.render(Arc::new(lights));
+}
+
+fn koishi() {
+    let aspect_ratio = 1.0;
+    let image_width = 600;
+    let samples_per_pixel = 100;
+    let max_depth = 50;
+    let v_fov = 40.0;
+    let look_from = Point3::new(0.0, 170.0, 100.0);
+    let look_at = Point3::new(0.0, 110.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle = 0.0;
+    let focus_dist = 10.0;
+    let background = Color::new(1.0, 1.0, 1.0);
+
+    let mut world = HittableList::default();
+    let mut lights = HittableList::default();
+
+    create_model("assets/koishi.obj", "assets/koishi.mtl", &mut world,&mut lights);
 
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),
