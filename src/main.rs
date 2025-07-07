@@ -126,8 +126,8 @@ fn koishi() {
     let samples_per_pixel = 100;
     let max_depth = 50;
     let v_fov = 40.0;
-    let look_from = Point3::new(0.0, 170.0, 100.0);
-    let look_at = Point3::new(0.0, 110.0, 0.0);
+    let look_from = Point3::new(0.0, 165.0, 100.0);
+    let look_at = Point3::new(0.0, 120.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let defocus_angle = 0.0;
     let focus_dist = 10.0;

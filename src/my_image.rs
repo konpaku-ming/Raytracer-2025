@@ -1,5 +1,4 @@
 use image::ImageReader;
-use std::env;
 use std::path::PathBuf;
 
 pub struct MyImage {
@@ -21,27 +20,11 @@ impl MyImage {
         };
 
         let filename = image_filename.to_string();
-        let image_dir = env::var("MY_IMAGES").ok();
 
-        let mut paths = vec![];
+        let path = PathBuf::from("assets").join(&filename);
 
-        if let Some(dir) = image_dir {
-            paths.push(PathBuf::from(dir).join(&filename));
-        }
-        paths.push(PathBuf::from("assets").join(&filename));
-        paths.push(PathBuf::from(&filename));
-        paths.push(PathBuf::from("images").join(&filename));
-
-        let mut current = PathBuf::from("..");
-        for _ in 0..6 {
-            paths.push(current.join("images").join(&filename));
-            current = current.join("..");
-        }
-
-        for path in paths {
-            if image.load(&path) {
-                return image;
-            }
+        if image.load(&path) {
+            return image;
         }
 
         eprintln!("ERROR: Could not load image file '{}'.", filename);

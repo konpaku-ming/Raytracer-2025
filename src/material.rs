@@ -69,7 +69,7 @@ impl Material for Lambertian {
     fn scatter(&self, _r_in: &Ray, rec: &HitRecord, s_rec: &mut ScatterRecord) -> bool {
         s_rec.attenuation = self.tex.value(rec.u, rec.v, &rec.pos);
         s_rec.pdf_ptr = Arc::new(CosinePdf::new(&rec.normal));
-        s_rec.skip_pdf = false;
+        s_rec.skip_pdf = true;
         true
     }
 }
