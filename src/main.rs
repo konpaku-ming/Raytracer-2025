@@ -4,6 +4,7 @@ use raytracer::material::{Dielectric, DiffuseLight, DummyMaterial, Lambertian};
 use raytracer::modeling::{Quad, RotateY, Sphere, Translate, make_box};
 use raytracer::obj::create_model;
 use raytracer::raytracer::RayTracer;
+use raytracer::texture::{ImageTexture, MappedTexture};
 use raytracer::vec3::{Point3, Vec3};
 use raytracer::vec3color::Color;
 use std::sync::Arc;
@@ -12,7 +13,8 @@ fn main() {
     let op = 3;
     match op {
         1 => cornell_box(),
-        2 => sphere(),
+        2 => word(),
+        3 => ground(),
         _ => koishi(),
     }
 }
@@ -124,10 +126,10 @@ fn cornell_box() {
 fn koishi() {
     let aspect_ratio = 1.0;
     let image_width = 600;
-    let samples_per_pixel = 10000;
+    let samples_per_pixel = 500;
     let max_depth = 50;
     let v_fov = 40.0;
-    let look_from = Point3::new(0.0, 165.0, 100.0);
+    let look_from = Point3::new(0.0, 165.0, 150.0);
     let look_at = Point3::new(0.0, 120.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let defocus_angle = 0.0;
@@ -147,6 +149,15 @@ fn koishi() {
 
     create_model("assets/koishi.obj", "assets/koishi.mtl", &mut world);
 
+    let star = Lambertian::from_tex(Arc::new(ImageTexture::new("star.jpg")));
+
+    world.add(Arc::new(Quad::new(
+        Point3::new(-200.0, 0.0, 0.0),
+        Vec3::new(400.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -500.0),
+        Arc::new(star),
+    )));
+
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),
         (look_from, look_at, vup, v_fov),
@@ -159,14 +170,14 @@ fn koishi() {
     raytracer.render(Arc::new(lights));
 }
 
-fn sphere() {
+fn word() {
     let aspect_ratio = 1.0;
     let image_width = 600;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 500;
     let max_depth = 50;
     let v_fov = 40.0;
-    let look_from = Point3::new(0.0, 165.0, 100.0);
-    let look_at = Point3::new(0.0, 120.0, 0.0);
+    let look_from = Point3::new(0.0, 15.0, 100.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let defocus_angle = 0.0;
     let focus_dist = 10.0;
@@ -175,23 +186,59 @@ fn sphere() {
     let mut world = HittableList::default();
     let mut lights = HittableList::default();
 
-    let red = Arc::new(Lambertian::new(Color::new(0.65, 0.05, 0.05)));
+    create_model("assets/gate.obj", "assets/gate.mtl", &mut world);
 
-    world.add(Arc::new(Sphere::new(
-        Point3::new(0.0, 100.0, -20.0),
-        10.0,
-        red,
-    )));
-
-    /*
     let empty_material = Arc::new(DummyMaterial);
 
-    lights.add(Arc::new(Sphere::new(
-        Point3::new(0.0, 100.0, -20.0),
-        10.0,
+    lights.add(Arc::new(Quad::new(
+        Point3::new(-100.0, 300.0, -100.0),
+        Vec3::new(200.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 200.0),
         empty_material,
     )));
-     */
+
+    let mut raytracer = RayTracer::new(
+        (aspect_ratio, image_width),
+        (look_from, look_at, vup, v_fov),
+        world,
+        samples_per_pixel,
+        max_depth,
+        (defocus_angle, focus_dist),
+        background,
+    );
+    raytracer.render(Arc::new(lights));
+}
+
+fn ground() {
+    let aspect_ratio = 1.0;
+    let image_width = 600;
+    let samples_per_pixel = 500;
+    let max_depth = 50;
+    let v_fov = 40.0;
+    let look_from = Point3::new(0.0, 100.0, 100.0);
+    let look_at = Point3::new(0.0, 10.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle = 0.0;
+    let focus_dist = 10.0;
+    let background = Color::new(1.0, 1.0, 1.0);
+
+    let mut world = HittableList::default();
+    let mut lights = HittableList::default();
+
+    let brick = Lambertian::from_tex(Arc::new(MappedTexture::new(
+        "default_diffuse.png",
+        Some("ground_normal_map.png"),
+        None,
+    )));
+
+    let ground = Quad::new(
+        Point3::new(-100.0, 0.0, -100.0),
+        Vec3::new(200.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 200.0),
+        Arc::new(brick),
+    );
+
+    world.add(Arc::new(ground));
 
     let empty_material = Arc::new(DummyMaterial);
 

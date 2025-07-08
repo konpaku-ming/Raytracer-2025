@@ -214,7 +214,7 @@ impl Texture for MappedTexture {
         &self,
         u: f64,
         v: f64,
-        geom_normal: Vec3,
+        normal: Vec3,
         tangent: Vec3,
         bitangent: Vec3,
     ) -> Option<Vec3> {
@@ -231,7 +231,7 @@ impl Texture for MappedTexture {
         let nz = 2.0 * (pixel[2] as f64 / 255.0) - 1.0;
 
         let tangent_space_normal = Vec3::new(nx, ny, nz);
-        let tbn = Mat3::from_cols(tangent, bitangent, geom_normal);
+        let tbn = Mat3::from_cols(tangent, bitangent, normal);
         Some(tbn.mul_vec3(tangent_space_normal))
     }
 }

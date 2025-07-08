@@ -30,7 +30,7 @@ pub trait Material: Send + Sync {
     fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
         0.0
     }
-    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _s_rec: &mut ScatterRecord) -> bool {
+    fn scatter(&self, _r_in: &Ray, _rec: &mut HitRecord, _s_rec: &mut ScatterRecord) -> bool {
         false
     }
 
@@ -66,7 +66,15 @@ impl Material for Lambertian {
         if cos_theta < 0.0 { 0.0 } else { cos_theta / PI }
     }
 
-    fn scatter(&self, _r_in: &Ray, rec: &HitRecord, s_rec: &mut ScatterRecord) -> bool {
+    fn scatter(&self, _r_in: &Ray, rec: &mut HitRecord, s_rec: &mut ScatterRecord) -> bool {
+        rec.normal = match self
+            .tex
+            .normal(rec.u, rec.v, rec.normal, rec.tangent, rec.bitangent)
+        {
+            Some(n) => n,
+            _ => rec.normal,
+        };
+
         s_rec.attenuation = self.tex.value(rec.u, rec.v, &rec.pos);
         s_rec.pdf_ptr = Arc::new(CosinePdf::new(&rec.normal));
         s_rec.skip_pdf = false;
@@ -89,7 +97,7 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, s_rec: &mut ScatterRecord) -> bool {
+    fn scatter(&self, r_in: &Ray, rec: &mut HitRecord, s_rec: &mut ScatterRecord) -> bool {
         let mut reflected = Vec3::reflect(r_in.direction(), &rec.normal);
         reflected = unit_vector(&reflected) + (self.fuzz * random_unit_vector());
 
@@ -118,7 +126,7 @@ fn reflectance(cosine: f64, refraction_index: f64) -> f64 {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, s_rec: &mut ScatterRecord) -> bool {
+    fn scatter(&self, r_in: &Ray, rec: &mut HitRecord, s_rec: &mut ScatterRecord) -> bool {
         s_rec.attenuation = Color::new(1.0, 1.0, 1.0);
         s_rec.pdf_ptr = Arc::new(DummyPdf);
         s_rec.skip_pdf = true;
@@ -191,7 +199,7 @@ impl Material for Isotropic {
         1.0 / (4.0 * PI)
     }
 
-    fn scatter(&self, _r_in: &Ray, rec: &HitRecord, s_rec: &mut ScatterRecord) -> bool {
+    fn scatter(&self, _r_in: &Ray, rec: &mut HitRecord, s_rec: &mut ScatterRecord) -> bool {
         s_rec.attenuation = self.tex.value(rec.u, rec.v, &rec.pos);
         s_rec.pdf_ptr = Arc::new(SpherePdf::new());
         s_rec.skip_pdf = false;

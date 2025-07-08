@@ -94,7 +94,8 @@ impl RayTracer {
         {
             let mut s_rec = ScatterRecord::default();
             let color_from_emission = rec.mat.emitted(ray, &rec, rec.u, rec.v, &rec.pos);
-            if !rec.mat.scatter(ray, &rec, &mut s_rec) {
+            let mat = rec.mat.clone();
+            if !mat.scatter(ray, &mut rec, &mut s_rec) {
                 return color_from_emission;
             }
 

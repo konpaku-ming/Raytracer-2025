@@ -32,7 +32,7 @@ pub struct Triangle {
     n2: Vec3,
     e1: Vec3, //边01
     e2: Vec3, //边02
-    //tangent: Vec3,
+    tangent: Vec3,
     mat: Arc<dyn Material + Send + Sync>,
     bbox: Aabb,
 }
@@ -52,14 +52,14 @@ impl Triangle {
     ) -> Self {
         let e1 = p1 - p0;
         let e2 = p2 - p0;
-        /*
-        let tangent = Vec3::new(
-            uv2.v() * e1.x() - uv1.v() * e2.x(),
-            uv2.v() * e1.y() - uv1.v() * e2.y(),
-            uv2.v() * e1.z() - uv1.v() * e2.z(),
-        );
-         */
-        //let tangent = tangent / (uv1.u() * uv2.v() - uv2.u() * uv1.v());
+
+        let delta_uv1 = uv1 - uv0;
+        let delta_uv2 = uv2 - uv0;
+
+        let r = 1.0 / (delta_uv1.u() * delta_uv2.v() - delta_uv1.v() * delta_uv2.u());
+
+        let tangent = (e1 * delta_uv2.v() - e2 * delta_uv1.v()) * r;
+
         let mut triangle = Self {
             p0,
             p1,
@@ -72,7 +72,7 @@ impl Triangle {
             n2,
             e1,
             e2,
-            //tangent,
+            tangent,
             mat,
             bbox: Aabb::default(),
         };
@@ -127,11 +127,16 @@ impl Hittable for Triangle {
 
         let normal = interpolate_normals(self.n0, self.n1, self.n2, u, v);
 
+        let tangent = unit_vector(&(self.tangent - normal * dot(&self.tangent, &normal)));
+        let bitangent = cross(&normal, &tangent);
+
         rec.u = uv.u();
         rec.v = uv.v();
         rec.t = t;
         rec.pos = intersection;
         rec.mat = self.mat.clone();
+        rec.tangent = tangent;
+        rec.bitangent = bitangent;
         rec.normal = normal;
         true
     }
@@ -267,11 +272,7 @@ pub fn obj_loader(obj_path: &str, mtl_path: &str) -> Vec<Triangle> {
     triangles
 }
 
-pub fn create_model(
-    obj_path: &str,
-    mtl_path: &str,
-    world: &mut HittableList,
-) {
+pub fn create_model(obj_path: &str, mtl_path: &str, world: &mut HittableList) {
     let vec = obj_loader(obj_path, mtl_path);
     let mut model = HittableList::default();
     for triangle in vec {
