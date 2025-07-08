@@ -9,9 +9,10 @@ use raytracer::vec3color::Color;
 use std::sync::Arc;
 
 fn main() {
-    let op = 2;
+    let op = 3;
     match op {
         1 => cornell_box(),
+        2 => sphere(),
         _ => koishi(),
     }
 }
@@ -123,6 +124,44 @@ fn cornell_box() {
 fn koishi() {
     let aspect_ratio = 1.0;
     let image_width = 600;
+    let samples_per_pixel = 10000;
+    let max_depth = 50;
+    let v_fov = 40.0;
+    let look_from = Point3::new(0.0, 165.0, 100.0);
+    let look_at = Point3::new(0.0, 120.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle = 0.0;
+    let focus_dist = 10.0;
+    let background = Color::new(1.0, 1.0, 1.0);
+
+    let mut world = HittableList::default();
+    let mut lights = HittableList::default();
+    let empty_material = Arc::new(DummyMaterial);
+
+    lights.add(Arc::new(Quad::new(
+        Point3::new(-100.0, 300.0, -100.0),
+        Vec3::new(200.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 200.0),
+        empty_material,
+    )));
+
+    create_model("assets/koishi.obj", "assets/koishi.mtl", &mut world);
+
+    let mut raytracer = RayTracer::new(
+        (aspect_ratio, image_width),
+        (look_from, look_at, vup, v_fov),
+        world,
+        samples_per_pixel,
+        max_depth,
+        (defocus_angle, focus_dist),
+        background,
+    );
+    raytracer.render(Arc::new(lights));
+}
+
+fn sphere() {
+    let aspect_ratio = 1.0;
+    let image_width = 600;
     let samples_per_pixel = 100;
     let max_depth = 50;
     let v_fov = 40.0;
@@ -136,7 +175,32 @@ fn koishi() {
     let mut world = HittableList::default();
     let mut lights = HittableList::default();
 
-    create_model("assets/koishi.obj", "assets/koishi.mtl", &mut world,&mut lights);
+    let red = Arc::new(Lambertian::new(Color::new(0.65, 0.05, 0.05)));
+
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 100.0, -20.0),
+        10.0,
+        red,
+    )));
+
+    /*
+    let empty_material = Arc::new(DummyMaterial);
+
+    lights.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 100.0, -20.0),
+        10.0,
+        empty_material,
+    )));
+     */
+
+    let empty_material = Arc::new(DummyMaterial);
+
+    lights.add(Arc::new(Quad::new(
+        Point3::new(-100.0, 300.0, -100.0),
+        Vec3::new(200.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 200.0),
+        empty_material,
+    )));
 
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),

@@ -19,8 +19,6 @@ pub struct HitRecord {
     pub mat: Arc<dyn Material>,
     pub u: f64,
     pub v: f64,
-    pub tangent: Vec3,
-    pub bitangent: Vec3,
 }
 
 impl Default for HitRecord {
@@ -33,8 +31,6 @@ impl Default for HitRecord {
             mat: Arc::new(DummyMaterial {}),
             u: 0.0,
             v: 0.0,
-            tangent: Vec3::new(1.0, 0.0, 0.0),
-            bitangent: Vec3::new(0.0, 1.0, 0.0),
         }
     }
 }
@@ -57,8 +53,6 @@ impl HitRecord {
             mat: Arc::new(DummyMaterial {}),
             u: 0.0,
             v: 0.0,
-            tangent: Vec3::new(1.0, 0.0, 0.0),
-            bitangent: Vec3::new(0.0, 1.0, 0.0),
         }
     }
 
