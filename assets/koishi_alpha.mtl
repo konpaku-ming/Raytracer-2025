@@ -1,0 +1,47 @@
+newmtl BodySG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd cloth.png
+map_d cloth_alpha.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 98.00
+newmtl BodySG1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd face.png
+map_d face_alpha.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 98.00
+newmtl BodySG2
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd body.png
+map_d body_alpha.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 98.00
+newmtl BodySG3
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd hair.png
+map_d hair_alpha.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 98.00
+newmtl phongE1SG
+illum 4
+Kd 0.50 0.50 0.50
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50

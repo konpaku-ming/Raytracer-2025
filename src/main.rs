@@ -4,13 +4,13 @@ use raytracer::material::{Dielectric, DiffuseLight, DummyMaterial, Lambertian};
 use raytracer::modeling::{Quad, RotateY, Sphere, Translate, make_box};
 use raytracer::obj::create_model;
 use raytracer::raytracer::RayTracer;
-use raytracer::texture::{ImageTexture, MappedTexture};
+use raytracer::texture::MappedTexture;
 use raytracer::vec3::{Point3, Vec3};
 use raytracer::vec3color::Color;
 use std::sync::Arc;
 
 fn main() {
-    let op = 3;
+    let op = 4;
     match op {
         1 => cornell_box(),
         2 => word(),
@@ -147,16 +147,76 @@ fn koishi() {
         empty_material,
     )));
 
-    create_model("assets/koishi.obj", "assets/koishi.mtl", &mut world);
+    create_model(
+        "assets/koishi_alpha.obj",
+        "assets/koishi_alpha.mtl",
+        &mut world,
+        183.0,
+        Vec3::new(-10.0, 0.0, -200.0),
+    );
 
-    let star = Lambertian::from_tex(Arc::new(ImageTexture::new("star.jpg")));
+    create_model(
+        "assets/koishi.obj",
+        "assets/koishi.mtl",
+        &mut world,
+        3.0,
+        Vec3::new(10.0, 0.0, 0.0),
+    );
 
-    world.add(Arc::new(Quad::new(
-        Point3::new(-200.0, 0.0, 0.0),
-        Vec3::new(400.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, -500.0),
-        Arc::new(star),
-    )));
+    let brick = Arc::new(MappedTexture::new(
+        "default_diffuse.png",
+        Some("ground_normal_map.png"),
+        None,
+    ));
+
+    let ground1 = Quad::new(
+        Point3::new(0.0, 0.0, -100.0),
+        Vec3::new(200.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 200.0),
+        Arc::new(Lambertian::from_tex(brick.clone())),
+    );
+
+    let ground2 = Quad::new(
+        Point3::new(0.0, 0.0, -300.0),
+        Vec3::new(200.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 200.0),
+        Arc::new(Lambertian::from_tex(brick.clone())),
+    );
+
+    let ground3 = Quad::new(
+        Point3::new(-200.0, 0.0, -100.0),
+        Vec3::new(200.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 200.0),
+        Arc::new(Lambertian::from_tex(brick.clone())),
+    );
+
+    let ground4 = Quad::new(
+        Point3::new(-200.0, 0.0, -300.0),
+        Vec3::new(200.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 200.0),
+        Arc::new(Lambertian::from_tex(brick.clone())),
+    );
+
+    let ground5 = Quad::new(
+        Point3::new(0.0, 0.0, -500.0),
+        Vec3::new(200.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 200.0),
+        Arc::new(Lambertian::from_tex(brick.clone())),
+    );
+
+    let ground6 = Quad::new(
+        Point3::new(-200.0, 0.0, -500.0),
+        Vec3::new(200.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 200.0),
+        Arc::new(Lambertian::from_tex(brick.clone())),
+    );
+
+    world.add(Arc::new(ground1));
+    world.add(Arc::new(ground2));
+    world.add(Arc::new(ground3));
+    world.add(Arc::new(ground4));
+    world.add(Arc::new(ground5));
+    world.add(Arc::new(ground6));
 
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),
@@ -183,10 +243,8 @@ fn word() {
     let focus_dist = 10.0;
     let background = Color::new(1.0, 1.0, 1.0);
 
-    let mut world = HittableList::default();
+    let world = HittableList::default();
     let mut lights = HittableList::default();
-
-    create_model("assets/gate.obj", "assets/gate.mtl", &mut world);
 
     let empty_material = Arc::new(DummyMaterial);
 

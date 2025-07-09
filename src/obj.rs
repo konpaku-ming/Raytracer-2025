@@ -2,8 +2,8 @@ use crate::aabb::Aabb;
 use crate::bvh::BvhNode;
 use crate::hit_checker::{HitRecord, Hittable, HittableList};
 use crate::interval::Interval;
-use crate::material::{Lambertian, Material};
-use crate::modeling::Translate;
+use crate::material::Lambertian;
+use crate::modeling::{RotateY, Translate};
 use crate::mtl::{make_mapped_texture_from_mtl, parse_mtl_file};
 use crate::random::random_double;
 use crate::ray::Ray;
@@ -33,7 +33,7 @@ pub struct Triangle {
     e1: Vec3, //边01
     e2: Vec3, //边02
     tangent: Vec3,
-    mat: Arc<dyn Material + Send + Sync>,
+    mat: Arc<Lambertian>,
     bbox: Aabb,
 }
 
@@ -48,7 +48,7 @@ impl Triangle {
         n0: Vec3,
         n1: Vec3,
         n2: Vec3,
-        mat: Arc<dyn Material>,
+        mat: Arc<Lambertian>,
     ) -> Self {
         let e1 = p1 - p0;
         let e2 = p2 - p0;
@@ -129,6 +129,12 @@ impl Hittable for Triangle {
 
         let tangent = unit_vector(&(self.tangent - normal * dot(&self.tangent, &normal)));
         let bitangent = cross(&normal, &tangent);
+
+        let alpha = self.mat.alpha(uv.u(), uv.v());
+        let x = random_double();
+        if x <= alpha {
+            return false;
+        }
 
         rec.u = uv.u();
         rec.v = uv.v();
@@ -272,13 +278,20 @@ pub fn obj_loader(obj_path: &str, mtl_path: &str) -> Vec<Triangle> {
     triangles
 }
 
-pub fn create_model(obj_path: &str, mtl_path: &str, world: &mut HittableList) {
+pub fn create_model(
+    obj_path: &str,
+    mtl_path: &str,
+    world: &mut HittableList,
+    angle: f64,
+    offset: Vec3,
+) {
     let vec = obj_loader(obj_path, mtl_path);
     let mut model = HittableList::default();
     for triangle in vec {
         model.add(Arc::new(triangle));
     }
     let bvh = BvhNode::from_list(&mut model);
-    let model_translate = Arc::new(Translate::new(Arc::new(bvh), Vec3::new(0.0, 0.0, 0.0)));
+    let model_rotate_y = Arc::new(RotateY::new(Arc::new(bvh), angle));
+    let model_translate = Arc::new(Translate::new(model_rotate_y, offset));
     world.add(model_translate.clone());
 }

@@ -102,10 +102,41 @@ impl Texture for ImageTexture {
         let u = Interval::new(0.0, 1.0).clamp(u);
         let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
 
-        let i = (u * self.image.width() as f64) as usize;
-        let j = (v * self.image.height() as f64) as usize;
+        let i = u * self.image.width() as f64;
+        let j = v * self.image.height() as f64;
 
-        let pixel = self.image.pixel_rgba(i, j);
+        let i1 = i as usize;
+        let j1 = j as usize;
+        let i2 = (i + 1.0).min(self.image.width() as f64) as usize;
+        let j2 = (j + 1.0).min(self.image.height() as f64) as usize;
+
+        let sx = i - i1 as f64;
+        let sy = j - j1 as f64;
+
+        let pixel1 = self.image.pixel_rgba(i1, j1);
+        let pixel2 = self.image.pixel_rgba(i2, j1);
+        let pixel3 = self.image.pixel_rgba(i1, j2);
+        let pixel4 = self.image.pixel_rgba(i2, j2);
+
+        let pixel: [u8; 4] = [
+            ((1.0 - sy) * (1.0 - sx) * (pixel1[0] as f64)
+                + (1.0 - sy) * sx * (pixel2[0] as f64)
+                + (1.0 - sx) * sy * (pixel3[0] as f64)
+                + sx * sy * (pixel4[0] as f64)) as u8,
+            ((1.0 - sy) * (1.0 - sx) * (pixel1[1] as f64)
+                + (1.0 - sy) * sx * (pixel2[1] as f64)
+                + (1.0 - sx) * sy * (pixel3[1] as f64)
+                + sx * sy * (pixel4[1] as f64)) as u8,
+            ((1.0 - sy) * (1.0 - sx) * (pixel1[2] as f64)
+                + (1.0 - sy) * sx * (pixel2[2] as f64)
+                + (1.0 - sx) * sy * (pixel3[2] as f64)
+                + sx * sy * (pixel4[2] as f64)) as u8,
+            ((1.0 - sy) * (1.0 - sx) * (pixel1[3] as f64)
+                + (1.0 - sy) * sx * (pixel2[3] as f64)
+                + (1.0 - sx) * sy * (pixel3[3] as f64)
+                + sx * sy * (pixel4[3] as f64)) as u8,
+        ];
+
         let color_scale = 1.0 / 255.0;
 
         Color::new(
@@ -176,15 +207,6 @@ impl MappedTexture {
             alpha_map,
         }
     }
-
-    pub fn get_uv(&self, u: f64, v: f64) -> (usize, usize) {
-        let u = Interval::new(0.0, 1.0).clamp(u);
-        let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
-
-        let i = (u * self.color_map.width() as f64) as usize;
-        let j = (v * self.color_map.height() as f64) as usize;
-        (i, j)
-    }
 }
 
 impl Texture for MappedTexture {
@@ -196,10 +218,36 @@ impl Texture for MappedTexture {
         let u = Interval::new(0.0, 1.0).clamp(u);
         let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
 
-        let i = (u * self.color_map.width() as f64) as usize;
-        let j = (v * self.color_map.height() as f64) as usize;
+        let i = u * self.color_map.width() as f64;
+        let j = v * self.color_map.height() as f64;
 
-        let pixel = self.color_map.pixel_rgba(i, j);
+        let i1 = i as usize;
+        let j1 = j as usize;
+        let i2 = (i + 1.0).min(self.color_map.width() as f64) as usize;
+        let j2 = (j + 1.0).min(self.color_map.height() as f64) as usize;
+
+        let sx = i - i1 as f64;
+        let sy = j - j1 as f64;
+
+        let pixel1 = self.color_map.pixel_rgba(i1, j1);
+        let pixel2 = self.color_map.pixel_rgba(i2, j1);
+        let pixel3 = self.color_map.pixel_rgba(i1, j2);
+        let pixel4 = self.color_map.pixel_rgba(i2, j2);
+
+        let mut pixel: [u8; 4] = [0; 4];
+        pixel[0] = (((1.0 - sx) * (pixel1[0] as f64) + sx * (pixel2[0] as f64)) * (1.0 - sy)
+            + ((1.0 - sx) * (pixel3[0] as f64) + sx * (pixel4[0] as f64)) * sy)
+            as u8;
+        pixel[1] = (((1.0 - sx) * (pixel1[1] as f64) + sx * (pixel2[1] as f64)) * (1.0 - sy)
+            + ((1.0 - sx) * (pixel3[1] as f64) + sx * (pixel4[1] as f64)) * sy)
+            as u8;
+        pixel[2] = (((1.0 - sx) * (pixel1[2] as f64) + sx * (pixel2[2] as f64)) * (1.0 - sy)
+            + ((1.0 - sx) * (pixel3[2] as f64) + sx * (pixel4[2] as f64)) * sy)
+            as u8;
+        pixel[3] = (((1.0 - sx) * (pixel1[3] as f64) + sx * (pixel2[3] as f64)) * (1.0 - sy)
+            + ((1.0 - sx) * (pixel3[3] as f64) + sx * (pixel4[3] as f64)) * sy)
+            as u8;
+
         let color_scale = 1.0 / 255.0;
 
         let color = Color::new(
@@ -210,14 +258,7 @@ impl Texture for MappedTexture {
         color * color
     }
 
-    fn normal(
-        &self,
-        u: f64,
-        v: f64,
-        normal: Vec3,
-        tangent: Vec3,
-        bitangent: Vec3,
-    ) -> Option<Vec3> {
+    fn normal(&self, u: f64, v: f64, normal: Vec3, tangent: Vec3, bitangent: Vec3) -> Option<Vec3> {
         let map = self.normal_map.as_ref()?;
         let u = Interval::new(0.0, 1.0).clamp(u);
         let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
@@ -233,5 +274,17 @@ impl Texture for MappedTexture {
         let tangent_space_normal = Vec3::new(nx, ny, nz);
         let tbn = Mat3::from_cols(tangent, bitangent, normal);
         Some(tbn.mul_vec3(tangent_space_normal))
+    }
+
+    fn alpha(&self, u: f64, v: f64) -> Option<f64> {
+        let map = self.alpha_map.as_ref()?;
+        let u = Interval::new(0.0, 1.0).clamp(u);
+        let v = 1.0 - Interval::new(0.0, 1.0).clamp(v);
+
+        let i = (u * map.width() as f64) as usize;
+        let j = (v * map.height() as f64) as usize;
+        let pixel = map.pixel_rgba(i, j);
+
+        Some(pixel[0] as f64 / 255.0)
     }
 }

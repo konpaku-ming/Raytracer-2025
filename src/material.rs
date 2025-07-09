@@ -58,6 +58,13 @@ impl Lambertian {
     pub fn from_tex(tex: Arc<dyn Texture>) -> Self {
         Self { tex }
     }
+
+    pub fn alpha(&self, u: f64, v: f64) -> f64 {
+        match self.tex.alpha(u, v) {
+            Some(a) => a.sqrt(),
+            _ => 0.0,
+        }
+    }
 }
 
 impl Material for Lambertian {
