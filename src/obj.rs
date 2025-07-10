@@ -171,7 +171,7 @@ impl Hittable for Triangle {
     }
 }
 
-pub fn obj_loader(obj_path: &str, mtl_path: &str) -> Vec<Triangle> {
+pub fn obj_loader(obj_path: &str, mtl_path: &str, rate: f64) -> Vec<Triangle> {
     // 加载 .obj 模型与材质列表
     let (models, materials) = load_obj(
         obj_path,
@@ -224,9 +224,9 @@ pub fn obj_loader(obj_path: &str, mtl_path: &str) -> Vec<Triangle> {
             let get_vertex = |j| {
                 let idx = indices[i + j] as usize;
                 Point3::new(
-                    positions[3 * idx] as f64,
-                    positions[3 * idx + 1] as f64,
-                    positions[3 * idx + 2] as f64,
+                    rate * positions[3 * idx] as f64,
+                    rate * positions[3 * idx + 1] as f64,
+                    rate * positions[3 * idx + 2] as f64,
                 )
             };
 
@@ -242,9 +242,9 @@ pub fn obj_loader(obj_path: &str, mtl_path: &str) -> Vec<Triangle> {
             let get_normal = |j| {
                 let idx = indices[i + j] as usize;
                 Vec3::new(
-                    normals[3 * idx] as f64,
-                    normals[3 * idx + 1] as f64,
-                    normals[3 * idx + 2] as f64,
+                    rate * normals[3 * idx] as f64,
+                    rate * normals[3 * idx + 1] as f64,
+                    rate * normals[3 * idx + 2] as f64,
                 )
             };
 
@@ -284,8 +284,9 @@ pub fn create_model(
     world: &mut HittableList,
     angle: f64,
     offset: Vec3,
+    rate: f64, //放大倍率
 ) {
-    let vec = obj_loader(obj_path, mtl_path);
+    let vec = obj_loader(obj_path, mtl_path, rate);
     let mut model = HittableList::default();
     for triangle in vec {
         model.add(Arc::new(triangle));
