@@ -90,7 +90,6 @@ impl Hittable for Sphere {
     }
 
     fn pdf_value(&self, origin: Point3, direction: Vec3) -> f64 {
-        // 静态球体的 PDF 实现
         let ray = Ray::new(origin, direction);
         let mut rec = HitRecord::default();
 

@@ -87,7 +87,7 @@ impl RayTracer {
             return Color::new(0.0, 0.0, 0.0);
         }
         let mut rec = HitRecord::default();
-        //没击中物体返回背景色，击中不散射返回发光颜色（不发光材料=发黑色光）
+        //没击中物体返回背景色，击中不散射返回发光颜色
         if self
             .hittable_list
             .hit(ray, Interval::new(0.001, f64::INFINITY), &mut rec)

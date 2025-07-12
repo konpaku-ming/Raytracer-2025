@@ -127,6 +127,8 @@ impl Hittable for Triangle {
 
         let normal = interpolate_normals(self.n0, self.n1, self.n2, u, v);
 
+        let true_normal = unit_vector(&cross(&self.e1, &self.e2));
+
         let tangent = unit_vector(&(self.tangent - normal * dot(&self.tangent, &normal)));
         let bitangent = cross(&normal, &tangent);
 
@@ -143,7 +145,7 @@ impl Hittable for Triangle {
         rec.mat = self.mat.clone();
         rec.tangent = tangent;
         rec.bitangent = bitangent;
-        rec.normal = normal;
+        rec.normal = true_normal;
         true
     }
 
