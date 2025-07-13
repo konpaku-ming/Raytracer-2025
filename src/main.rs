@@ -1,7 +1,7 @@
 use raytracer::bvh::BvhNode;
 use raytracer::hit_checker::HittableList;
 use raytracer::material::{DiffuseLight, DummyMaterial, Lambertian, Metal};
-use raytracer::modeling::{Quad, Sphere, make_box};
+use raytracer::modeling::{ConstantMedium, Quad, Sphere, Translate, make_box};
 use raytracer::obj::create_model;
 use raytracer::raytracer::RayTracer;
 use raytracer::texture::{ImageTexture, MappedTexture};
@@ -86,7 +86,7 @@ fn final_scene() {
         "assets/morisa.mtl",
         &mut world,
         0.0,
-        Vec3::new(285.0, 0.0, -150.0),
+        Vec3::new(287.0, 0.0, -155.0),
         90.0,
     );
 
@@ -95,7 +95,7 @@ fn final_scene() {
         "assets/utsuho.mtl",
         &mut world,
         10.0,
-        Vec3::new(250.0, 140.0, 10.0),
+        Vec3::new(282.0, 80.0, -140.0),
         6.0,
     );
 
@@ -169,45 +169,37 @@ fn final_scene() {
         35.0,
         earth.clone(),
     )));
-    /*
 
-    let light1 = Arc::new(Quad::new(
-        Point3::new(-150.0, 500.0, -150.0),
-        Vec3::new(300.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, 300.0),
-        light.clone(),
+    let flame_box1 = make_box(
+        Point3::new(50.0, 260.0, 30.0),
+        Point3::new(0.0, 0.0, 0.0),
+        Arc::new(DummyMaterial),
+    );
+
+    let flame_box2 = make_box(
+        Point3::new(40.0, 200.0, 20.0),
+        Point3::new(0.0, 0.0, 0.0),
+        Arc::new(DummyMaterial),
+    );
+
+    let flame_box1 = Arc::new(Translate::new(flame_box1, Vec3::new(260.0, 35.0, -160.0)));
+
+    let flame_box2 = Arc::new(Translate::new(flame_box2, Vec3::new(265.0, 60.0, -155.0)));
+
+    let flame1 = Arc::new(ConstantMedium::from_color(
+        flame_box1,
+        0.02,
+        Color::new(0.96, 0.26, 0.0),
     ));
 
-    world.add(light1);
-
-    lights.add(Arc::new(Quad::new(
-        Point3::new(-150.0, 500.0, -150.0),
-        Vec3::new(300.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, 300.0),
-        empty_material.clone(),
-    )));
-
-
-     */
-    /*
-
-    let light2 = Arc::new(Quad::new(
-        Point3::new(450.0, 100.0, 200.0),
-        Vec3::new(-50.0, 0.0, -100.0),
-        Vec3::new(0.0, -100.0, -50.0),
-        light.clone(),
+    let flame2 = Arc::new(ConstantMedium::from_color(
+        flame_box2,
+        0.03,
+        Color::new(0.93, 0.86, 0.0),
     ));
 
-    world.add(light2);
-
-    lights.add(Arc::new(Quad::new(
-        Point3::new(450.0, 100.0, 200.0),
-        Vec3::new(-50.0, 0.0, -100.0),
-        Vec3::new(0.0, -100.0, -50.0),
-        empty_material.clone(),
-    )));
-
-     */
+    world.add(flame1);
+    world.add(flame2);
 
     let mut the_world = HittableList::default();
     the_world.add(Arc::new(BvhNode::from_list(&mut world)));
