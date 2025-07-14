@@ -82,7 +82,7 @@ impl RayTracer {
         }
     }
 
-    pub fn ray_color(&self, ray: &Ray, depth: i32, lights: Arc<dyn Hittable>) -> Color {
+    pub fn ray_color(&self, ray: &Ray, depth: i32, lights: Arc<HittableList>) -> Color {
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
@@ -121,7 +121,7 @@ impl RayTracer {
         self.background
     }
 
-    pub fn render(&mut self, lights: Arc<dyn Hittable>) {
+    pub fn render(&mut self, lights: Arc<HittableList>) {
         let width = self.width;
         let height = self.height;
         let samples_per_pixel = self.samples_per_pixel;

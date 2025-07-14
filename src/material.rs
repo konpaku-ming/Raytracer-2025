@@ -44,18 +44,12 @@ pub struct DummyMaterial;
 
 impl Material for DummyMaterial {}
 
-pub struct Lambertian {
-    pub tex: Arc<dyn Texture>,
+pub struct Lambertian<T: Texture> {
+    pub tex: Arc<T>,
 }
 
-impl Lambertian {
-    pub fn new(albedo: Color) -> Self {
-        Self {
-            tex: Arc::new(SolidColor::new(albedo)),
-        }
-    }
-
-    pub fn from_tex(tex: Arc<dyn Texture>) -> Self {
+impl<T: Texture> Lambertian<T> {
+    pub fn from_tex(tex: Arc<T>) -> Self {
         Self { tex }
     }
 
@@ -67,7 +61,15 @@ impl Lambertian {
     }
 }
 
-impl Material for Lambertian {
+impl Lambertian<SolidColor> {
+    pub fn new(albedo: Color) -> Self {
+        Self {
+            tex: Arc::new(SolidColor::new(albedo)),
+        }
+    }
+}
+
+impl<T: Texture> Material for Lambertian<T> {
     fn scattering_pdf(&self, _r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
         let cos_theta = dot(&rec.normal, &unit_vector(scattered.direction()));
         if cos_theta < 0.0 { 0.0 } else { cos_theta / PI }
@@ -159,45 +161,49 @@ impl Material for Dielectric {
     }
 }
 
-pub struct DiffuseLight {
-    tex: Arc<dyn Texture>,
+pub struct DiffuseLight<T: Texture> {
+    tex: Arc<T>,
 }
 
-impl DiffuseLight {
+impl<T: Texture> DiffuseLight<T> {
+    pub fn from_texture(tex: Arc<T>) -> Self {
+        Self { tex }
+    }
+}
+
+impl DiffuseLight<SolidColor> {
     pub fn new(emit: Color) -> Self {
         Self {
             tex: Arc::new(SolidColor::new(emit)),
         }
     }
-
-    pub fn from_texture(tex: Arc<dyn Texture>) -> Self {
-        Self { tex }
-    }
 }
 
-impl Material for DiffuseLight {
+impl<T: Texture> Material for DiffuseLight<T> {
     fn emitted(&self, _r_in: &Ray, _rec: &HitRecord, u: f64, v: f64, p: &Point3) -> Color {
         self.tex.value(u, v, p)
     }
 }
 
-pub struct Isotropic {
-    tex: Arc<dyn Texture>,
+pub struct Isotropic<T: Texture + ?Sized> {
+    tex: Arc<T>,
 }
 
-impl Isotropic {
+impl<T: Texture> Isotropic<T> {
+    pub fn new_from_texture(tex: Arc<T>) -> Self {
+        Self { tex }
+    }
+}
+
+impl Isotropic<SolidColor> {
     pub fn new_from_color(albedo: Color) -> Self {
         Self {
             tex: Arc::new(SolidColor::new(albedo)),
         }
     }
-
-    pub fn new_from_texture(tex: Arc<dyn Texture>) -> Self {
-        Self { tex }
-    }
 }
 
-impl Material for Isotropic {
+impl<T: Texture> Material for Isotropic<T> {
     fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
         1.0 / (4.0 * PI)
     }

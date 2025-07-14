@@ -45,21 +45,23 @@ impl Texture for SolidColor {
     }
 }
 
-pub struct CheckerTexture {
+pub struct CheckerTexture<T: Texture> {
     inv_scale: f64,
-    even: Arc<dyn Texture>,
-    odd: Arc<dyn Texture>,
+    even: Arc<T>,
+    odd: Arc<T>,
 }
 
-impl CheckerTexture {
-    pub fn new(scale: f64, even: Arc<dyn Texture>, odd: Arc<dyn Texture>) -> Self {
+impl<T: Texture> CheckerTexture<T> {
+    pub fn new(scale: f64, even: Arc<T>, odd: Arc<T>) -> Self {
         Self {
             inv_scale: 1.0 / scale,
             even,
             odd,
         }
     }
+}
 
+impl CheckerTexture<SolidColor> {
     pub fn from_colors(scale: f64, c1: Color, c2: Color) -> Self {
         let even = Arc::new(SolidColor::new(c1));
         let odd = Arc::new(SolidColor::new(c2));
@@ -67,7 +69,7 @@ impl CheckerTexture {
     }
 }
 
-impl Texture for CheckerTexture {
+impl<T: Texture> Texture for CheckerTexture<T> {
     fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
         let x = (self.inv_scale * p[0]).floor() as i32;
         let y = (self.inv_scale * p[1]).floor() as i32;

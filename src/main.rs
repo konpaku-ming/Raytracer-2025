@@ -3,6 +3,7 @@ use raytracer::hit_checker::HittableList;
 use raytracer::material::{DiffuseLight, DummyMaterial, Lambertian, Metal};
 use raytracer::modeling::{ConstantMedium, Quad, Sphere, Translate, make_box};
 use raytracer::obj::create_model;
+use raytracer::random::random_double_range;
 use raytracer::raytracer::RayTracer;
 use raytracer::texture::{ImageTexture, MappedTexture};
 use raytracer::vec3::{Point3, Vec3};
@@ -16,7 +17,7 @@ fn main() {
 fn final_scene() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 1600;
-    let samples_per_pixel = 10000;
+    let samples_per_pixel = 100;
     let max_depth = 50;
     let v_fov = 40.0;
     let look_from = Point3::new(160.0, 325.0, 420.0);
@@ -51,6 +52,20 @@ fn final_scene() {
         Point3::new(60.0, 300.0, 500.0),
         Vec3::new(10.0, 0.0, 0.0),
         Vec3::new(0.0, 10.0, 0.0),
+        empty_material.clone(),
+    )));
+
+    world.add(Arc::new(Quad::new(
+        Point3::new(-150.0, 0.0, 200.0),
+        Vec3::new(15.0, 0.0, 0.0),
+        Vec3::new(0.0, 20.0, 0.0),
+        light.clone(),
+    )));
+
+    lights.add(Arc::new(Quad::new(
+        Point3::new(-150.0, 0.0, 200.0),
+        Vec3::new(15.0, 0.0, 0.0),
+        Vec3::new(0.0, 20.0, 0.0),
         empty_material.clone(),
     )));
 
@@ -182,9 +197,9 @@ fn final_scene() {
         Arc::new(DummyMaterial),
     );
 
-    let flame_box1 = Arc::new(Translate::new(flame_box1, Vec3::new(260.0, 35.0, -160.0)));
+    let flame_box1 = Arc::new(Translate::new(flame_box1, Vec3::new(260.0, 55.0, -160.0)));
 
-    let flame_box2 = Arc::new(Translate::new(flame_box2, Vec3::new(265.0, 60.0, -155.0)));
+    let flame_box2 = Arc::new(Translate::new(flame_box2, Vec3::new(265.0, 45.0, -155.0)));
 
     let flame1 = Arc::new(ConstantMedium::from_color(
         flame_box1,
@@ -201,8 +216,32 @@ fn final_scene() {
     world.add(flame1);
     world.add(flame2);
 
+    let red = Arc::new(DiffuseLight::new(Color::new(3.0, 0.3, 0.1)));
+
+    for _ in 0..90 {
+        let x = random_double_range(-350.0, 350.0);
+        let y = random_double_range(150.0, 350.0);
+        let z = random_double_range(-300.0, 200.0);
+
+        let cen = Point3::new(x, y, z);
+
+        let dx = random_double_range(4.5, 4.6);
+        let dy = random_double_range(10.0, 15.0);
+        let dz = random_double_range(-0.1, 0.1);
+
+        let offset = Vec3::new(dx, dy, dz);
+
+        let r = random_double_range(0.5, 0.7);
+
+        let firefly = Arc::new(Sphere::new_moving(cen, cen + offset, r, red.clone()));
+
+        world.add(firefly);
+    }
+
     let mut the_world = HittableList::default();
     the_world.add(Arc::new(BvhNode::from_list(&mut world)));
+    
+    
 
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),

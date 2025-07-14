@@ -5,21 +5,21 @@ use crate::material::{Isotropic, Material};
 use crate::onb::ONB;
 use crate::random::{random_double, random_double_range, random_to_sphere};
 use crate::ray::Ray;
-use crate::texture::Texture;
+use crate::texture::{SolidColor, Texture};
 use crate::vec3::{Point3, Vec3, cross, dot, unit_vector};
 use crate::vec3color::Color;
 use std::f64::consts::PI;
 use std::sync::Arc;
 
-pub struct Sphere {
+pub struct Sphere<M: Material> {
     center: Ray,
     radius: f64,
-    mat: Arc<dyn Material + Send + Sync>,
+    mat: Arc<M>,
     bbox: Aabb,
 }
 
-impl Sphere {
-    pub fn new(static_center: Point3, radius: f64, mat: Arc<dyn Material + Send + Sync>) -> Self {
+impl<M: Material> Sphere<M> {
+    pub fn new(static_center: Point3, radius: f64, mat: Arc<M>) -> Self {
         let r_vec = Vec3::new(radius, radius, radius);
         Self {
             center: Ray::new(static_center, Vec3::new(0.0, 0.0, 0.0)),
@@ -29,12 +29,7 @@ impl Sphere {
         }
     }
 
-    pub fn new_moving(
-        center1: Point3,
-        center2: Point3,
-        radius: f64,
-        mat: Arc<dyn Material + Send + Sync>,
-    ) -> Self {
+    pub fn new_moving(center1: Point3, center2: Point3, radius: f64, mat: Arc<M>) -> Self {
         let center = Ray::new(center1, center2 - center1);
         let r_vec = Vec3::new(radius, radius, radius);
         let box1 = Aabb::from_points(center.at(0.0) - r_vec, center.at(0.0) + r_vec);
@@ -46,17 +41,17 @@ impl Sphere {
             bbox: Aabb::from_box(box1, box2),
         }
     }
-
-    pub fn get_sphere_uv(p: &Vec3) -> (f64, f64) {
-        let theta = (-p.y()).acos();
-        let phi = (-p.z()).atan2(p.x()) + PI;
-        let u = phi / (2.0 * PI);
-        let v = theta / PI;
-        (u, v)
-    }
 }
 
-impl Hittable for Sphere {
+pub fn get_sphere_uv(p: &Vec3) -> (f64, f64) {
+    let theta = (-p.y()).acos();
+    let phi = (-p.z()).atan2(p.x()) + PI;
+    let u = phi / (2.0 * PI);
+    let v = theta / PI;
+    (u, v)
+}
+
+impl<M: Material + Send + Sync + 'static> Hittable for Sphere<M> {
     fn hit(&self, ray: &Ray, interval: Interval, hit_record: &mut HitRecord) -> bool {
         let current_center = self.center.at(ray.time());
         let oc = current_center - *ray.origin();
@@ -67,6 +62,7 @@ impl Hittable for Sphere {
         if discriminant < 0.0 {
             return false;
         }
+
         let sqrt_d = discriminant.sqrt();
         let mut root = (h - sqrt_d) / a;
         if !interval.surrounds(root) {
@@ -75,12 +71,13 @@ impl Hittable for Sphere {
                 return false;
             }
         }
+
         hit_record.t = root;
         hit_record.pos = ray.at(hit_record.t);
-        hit_record.normal = (hit_record.pos - current_center) / self.radius;
         let outward_normal = (hit_record.pos - current_center) / self.radius;
         hit_record.set_face_normal(ray, outward_normal);
-        (hit_record.u, hit_record.v) = Sphere::get_sphere_uv(&outward_normal);
+        (hit_record.u, hit_record.v) = get_sphere_uv(&outward_normal);
+        hit_record.normal = outward_normal;
         hit_record.mat = self.mat.clone();
         true
     }
@@ -92,7 +89,6 @@ impl Hittable for Sphere {
     fn pdf_value(&self, origin: Point3, direction: Vec3) -> f64 {
         let ray = Ray::new(origin, direction);
         let mut rec = HitRecord::default();
-
         if !self.hit(&ray, Interval::new(0.001, f64::INFINITY), &mut rec) {
             return 0.0;
         }
@@ -112,25 +108,25 @@ impl Hittable for Sphere {
     }
 }
 
-pub struct Quad {
+pub struct Quad<M: Material> {
     q: Point3,
     u: Vec3,
     v: Vec3,
     w: Vec3,
-    mat: Arc<dyn Material + Send + Sync>,
+    mat: Arc<M>,
     bbox: Aabb,
     normal: Vec3,
     d: f64,
     area: f64,
 }
 
-impl Quad {
-    pub fn new(q: Point3, u: Vec3, v: Vec3, mat: Arc<dyn Material + Send + Sync>) -> Self {
+impl<M: Material> Quad<M> {
+    pub fn new(q: Point3, u: Vec3, v: Vec3, mat: Arc<M>) -> Self {
         let n = cross(&u, &v);
         let normal = unit_vector(&n);
         let d = dot(&normal, &q);
         let w = n / dot(&n, &n);
-        let mut quad = Quad {
+        let mut quad = Self {
             q,
             u,
             v,
@@ -162,7 +158,7 @@ impl Quad {
     }
 }
 
-impl Hittable for Quad {
+impl<M: Material + Send + Sync + 'static> Hittable for Quad<M> {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
         let denom = dot(&self.normal, r.direction());
         if denom.abs() < 1e-8 {
@@ -210,7 +206,11 @@ impl Hittable for Quad {
     }
 }
 
-pub fn make_box(a: Point3, b: Point3, mat: Arc<dyn Material + Send + Sync>) -> Arc<HittableList> {
+pub fn make_box<M: Material + Send + Sync + 'static>(
+    a: Point3,
+    b: Point3,
+    mat: Arc<M>,
+) -> Arc<HittableList> {
     let mut sides = HittableList::default();
 
     let min = Point3::new(a.x().min(b.x()), a.y().min(b.y()), a.z().min(b.z()));
@@ -224,49 +224,50 @@ pub fn make_box(a: Point3, b: Point3, mat: Arc<dyn Material + Send + Sync>) -> A
         Point3::new(min.x(), min.y(), max.z()),
         dx,
         dy,
-        mat.clone(), //front
+        mat.clone(),
     )));
     sides.add(Arc::new(Quad::new(
         Point3::new(max.x(), min.y(), max.z()),
         -dz,
         dy,
-        mat.clone(), //right
+        mat.clone(),
     )));
     sides.add(Arc::new(Quad::new(
         Point3::new(max.x(), min.y(), min.z()),
         -dx,
         dy,
-        mat.clone(), //back
+        mat.clone(),
     )));
     sides.add(Arc::new(Quad::new(
         Point3::new(min.x(), min.y(), min.z()),
         dz,
         dy,
-        mat.clone(), //left
+        mat.clone(),
     )));
     sides.add(Arc::new(Quad::new(
         Point3::new(min.x(), max.y(), max.z()),
         dx,
         -dz,
-        mat.clone(), //top
+        mat.clone(),
     )));
     sides.add(Arc::new(Quad::new(
         Point3::new(min.x(), min.y(), min.z()),
         dx,
         dz,
-        mat.clone(), //bottom
-    )));
+        mat.clone(),
+    ))); // bottom
+
     Arc::new(sides)
 }
 
-pub struct Translate {
-    object: Arc<dyn Hittable + Send + Sync>,
+pub struct Translate<H: Hittable + Send + Sync + 'static> {
+    object: Arc<H>,
     offset: Vec3,
     bbox: Aabb,
 }
 
-impl Translate {
-    pub fn new(object: Arc<dyn Hittable + Send + Sync>, offset: Vec3) -> Self {
+impl<H: Hittable + Send + Sync + 'static> Translate<H> {
+    pub fn new(object: Arc<H>, offset: Vec3) -> Self {
         let bbox = object.bounding_box() + offset;
         Self {
             object,
@@ -276,7 +277,7 @@ impl Translate {
     }
 }
 
-impl Hittable for Translate {
+impl<H: Hittable + Send + Sync + 'static> Hittable for Translate<H> {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
         let moved_r = Ray::new_with_time(*r.origin() - self.offset, *r.direction(), r.time());
         if !self.object.hit(&moved_r, ray_t, rec) {
@@ -291,15 +292,15 @@ impl Hittable for Translate {
     }
 }
 
-pub struct RotateY {
-    object: Arc<dyn Hittable>,
+pub struct RotateY<H: Hittable + Send + Sync + 'static> {
+    object: Arc<H>,
     sin_theta: f64,
     cos_theta: f64,
     bbox: Aabb,
 }
 
-impl RotateY {
-    pub fn new(object: Arc<dyn Hittable>, angle: f64) -> Self {
+impl<H: Hittable + Send + Sync + 'static> RotateY<H> {
+    pub fn new(object: Arc<H>, angle: f64) -> Self {
         let radians = degrees_to_radians(angle);
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();
@@ -335,7 +336,7 @@ impl RotateY {
     }
 }
 
-impl Hittable for RotateY {
+impl<H: Hittable + Send + Sync + 'static> Hittable for RotateY<H> {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
         let origin = Point3::new(
             (self.cos_theta * r.origin().x()) - (self.sin_theta * r.origin().z()),
@@ -373,30 +374,30 @@ impl Hittable for RotateY {
     }
 }
 
-pub struct ConstantMedium {
-    boundary: Arc<dyn Hittable + Send + Sync>,
+pub struct ConstantMedium<H: Hittable + Send + Sync + 'static, M: Material + Send + Sync + 'static>
+{
+    boundary: Arc<H>,
     neg_inv_density: f64,
-    phase_function: Arc<dyn Material + Send + Sync>,
+    phase_function: Arc<M>,
 }
 
-impl ConstantMedium {
-    pub fn from_texture(
-        boundary: Arc<dyn Hittable>,
-        density: f64,
-        tex: Arc<dyn Texture + Send + Sync>,
-    ) -> Self {
+impl<H: Hittable + Send + Sync + 'static, T: Texture + Send + Sync + 'static>
+    ConstantMedium<H, Isotropic<T>>
+{
+    pub fn from_texture(boundary: Arc<H>, density: f64, tex: Arc<T>) -> Self {
         Self {
             boundary,
             neg_inv_density: -1.0 / density,
             phase_function: Arc::new(Isotropic::new_from_texture(tex)),
         }
     }
+}
 
-    pub fn from_color(
-        boundary: Arc<dyn Hittable + Send + Sync>,
-        density: f64,
-        color: Color,
-    ) -> Self {
+impl<H> ConstantMedium<H, Isotropic<SolidColor>>
+where
+    H: Hittable + Send + Sync + 'static,
+{
+    pub fn from_color(boundary: Arc<H>, density: f64, color: Color) -> Self {
         Self {
             boundary,
             neg_inv_density: -1.0 / density,
@@ -405,7 +406,9 @@ impl ConstantMedium {
     }
 }
 
-impl Hittable for ConstantMedium {
+impl<H: Hittable + Send + Sync + 'static, M: Material + Send + Sync + 'static> Hittable
+    for ConstantMedium<H, M>
+{
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
         let mut rec1 = HitRecord::default();
         let mut rec2 = HitRecord::default();

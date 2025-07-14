@@ -68,18 +68,18 @@ impl Pdf for CosinePdf {
     }
 }
 
-pub struct HittablePdf {
-    objects: Arc<dyn Hittable>,
-    origin: Vec3,
+pub struct HittablePdf<H: Hittable + Send + Sync + 'static> {
+    objects: Arc<H>,
+    origin: Point3,
 }
 
-impl HittablePdf {
-    pub fn new(objects: Arc<dyn Hittable>, origin: Point3) -> Self {
+impl<H: Hittable + Send + Sync + 'static> HittablePdf<H> {
+    pub fn new(objects: Arc<H>, origin: Point3) -> Self {
         Self { objects, origin }
     }
 }
 
-impl Pdf for HittablePdf {
+impl<H: Hittable + Send + Sync + 'static> Pdf for HittablePdf<H> {
     fn value(&self, direction: Vec3) -> f64 {
         self.objects.pdf_value(self.origin, direction)
     }

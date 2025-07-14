@@ -7,9 +7,9 @@ use crate::modeling::{RotateY, Translate};
 use crate::mtl::{make_mapped_texture_from_mtl, parse_mtl_file};
 use crate::random::random_double;
 use crate::ray::Ray;
+use crate::texture::{MappedTexture, Texture};
 use crate::uv::UV;
 use crate::vec3::{Point3, Vec3, cross, dot, unit_vector};
-use crate::vec3color::Color;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tobj::{LoadOptions, load_obj};
@@ -20,7 +20,7 @@ pub fn interpolate_normals(n0: Vec3, n1: Vec3, n2: Vec3, u: f64, v: f64) -> Vec3
     unit_vector(&interpolated)
 }
 
-pub struct Triangle {
+pub struct Triangle<T: Texture> {
     p0: Point3, //顶点0
     p1: Point3,
     p2: Point3,
@@ -33,11 +33,11 @@ pub struct Triangle {
     e1: Vec3, //边01
     e2: Vec3, //边02
     tangent: Vec3,
-    mat: Arc<Lambertian>,
+    mat: Arc<Lambertian<T>>,
     bbox: Aabb,
 }
 
-impl Triangle {
+impl<T: Texture> Triangle<T> {
     pub fn new(
         p0: Point3,
         p1: Point3,
@@ -48,16 +48,14 @@ impl Triangle {
         n0: Vec3,
         n1: Vec3,
         n2: Vec3,
-        mat: Arc<Lambertian>,
+        mat: Arc<Lambertian<T>>,
     ) -> Self {
         let e1 = p1 - p0;
         let e2 = p2 - p0;
-
         let delta_uv1 = uv1 - uv0;
         let delta_uv2 = uv2 - uv0;
 
         let r = 1.0 / (delta_uv1.u() * delta_uv2.v() - delta_uv1.v() * delta_uv2.u());
-
         let tangent = (e1 * delta_uv2.v() - e2 * delta_uv1.v()) * r;
 
         let mut triangle = Self {
@@ -95,8 +93,9 @@ impl Triangle {
     }
 }
 
-impl Hittable for Triangle {
+impl<T: Texture + 'static> Hittable for Triangle<T> {
     fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+        // ... 你的 hit 实现逻辑保持不变，只确保 self.mat 是 Arc<Lambertian<T>>
         let h = cross(ray.direction(), &self.e2);
         let a = dot(&self.e1, &h);
         if a.abs() < 1e-8 {
@@ -122,19 +121,14 @@ impl Hittable for Triangle {
         }
 
         let intersection = ray.at(t);
-
         let uv = self.uv0 * (1.0 - u - v) + self.uv1 * u + self.uv2 * v;
-
         let normal = interpolate_normals(self.n0, self.n1, self.n2, u, v);
-
         let true_normal = unit_vector(&cross(&self.e1, &self.e2));
-
         let tangent = unit_vector(&(self.tangent - normal * dot(&self.tangent, &normal)));
         let bitangent = cross(&normal, &tangent);
 
         let alpha = self.mat.alpha(uv.u(), uv.v());
-        let x = random_double();
-        if x <= alpha {
+        if random_double() <= alpha {
             return false;
         }
 
@@ -173,7 +167,7 @@ impl Hittable for Triangle {
     }
 }
 
-pub fn obj_loader(obj_path: &str, mtl_path: &str, rate: f64) -> Vec<Triangle> {
+pub fn obj_loader(obj_path: &str, mtl_path: &str, rate: f64) -> Vec<Triangle<MappedTexture>> {
     // 加载 .obj 模型与材质列表
     let (models, materials) = load_obj(
         obj_path,
@@ -213,13 +207,25 @@ pub fn obj_loader(obj_path: &str, mtl_path: &str, rate: f64) -> Vec<Triangle> {
                 if let Some(resolved) = material_map.get(&mat.name) {
                     resolved.clone()
                 } else {
-                    Arc::new(Lambertian::new(Color::new(0.9, 0.5, 0.1)))
+                    Arc::new(Lambertian::from_tex(Arc::new(MappedTexture::new(
+                        "default_diffuse.png",
+                        None,
+                        None,
+                    ))))
                 }
             } else {
-                Arc::new(Lambertian::new(Color::new(0.9, 0.5, 0.1)))
+                Arc::new(Lambertian::from_tex(Arc::new(MappedTexture::new(
+                    "default_diffuse.png",
+                    None,
+                    None,
+                ))))
             }
         } else {
-            Arc::new(Lambertian::new(Color::new(0.9, 0.5, 0.1)))
+            Arc::new(Lambertian::from_tex(Arc::new(MappedTexture::new(
+                "default_diffuse.png",
+                None,
+                None,
+            ))))
         };
 
         for i in (0..indices.len()).step_by(3) {

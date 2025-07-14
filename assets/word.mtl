@@ -1,4 +1,4 @@
-newmtl mat0
+newmtl DefaultMaterial
 illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
