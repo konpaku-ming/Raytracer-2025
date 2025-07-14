@@ -219,9 +219,14 @@ fn final_scene() {
     let red = Arc::new(DiffuseLight::new(Color::new(3.0, 0.3, 0.1)));
 
     for _ in 0..90 {
-        let x = random_double_range(-350.0, 350.0);
+        let mut x = random_double_range(-350.0, 350.0);
         let y = random_double_range(150.0, 350.0);
-        let z = random_double_range(-300.0, 200.0);
+        let mut z = random_double_range(-300.0, 200.0);
+
+        while x > 10.0 && x < 90.0 && z > -10.0 && z < 10.0 {
+            x = random_double_range(-350.0, 350.0);
+            z = random_double_range(-300.0, 200.0);
+        }
 
         let cen = Point3::new(x, y, z);
 
@@ -240,8 +245,6 @@ fn final_scene() {
 
     let mut the_world = HittableList::default();
     the_world.add(Arc::new(BvhNode::from_list(&mut world)));
-    
-    
 
     let mut raytracer = RayTracer::new(
         (aspect_ratio, image_width),

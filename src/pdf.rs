@@ -1,6 +1,6 @@
 use crate::hit_checker::Hittable;
 use crate::onb::ONB;
-use crate::random::{random_cosine_direction, random_double, random_unit_vector};
+use crate::random::{random_cosine_direction, random_unit_vector};
 use crate::vec3::{Point3, Vec3, dot, unit_vector};
 use std::f64::consts::PI;
 use std::sync::Arc;
@@ -86,29 +86,5 @@ impl<H: Hittable + Send + Sync + 'static> Pdf for HittablePdf<H> {
 
     fn generate(&self) -> Vec3 {
         self.objects.random(self.origin)
-    }
-}
-
-pub struct MixturePdf {
-    p: [Arc<dyn Pdf>; 2],
-}
-
-impl MixturePdf {
-    pub fn new(p0: Arc<dyn Pdf>, p1: Arc<dyn Pdf>) -> Self {
-        MixturePdf { p: [p0, p1] }
-    }
-}
-
-impl Pdf for MixturePdf {
-    fn value(&self, direction: Vec3) -> f64 {
-        0.5 * self.p[0].value(direction) + 0.5 * self.p[1].value(direction)
-    }
-
-    fn generate(&self) -> Vec3 {
-        if random_double() < 0.5 {
-            self.p[0].generate()
-        } else {
-            self.p[1].generate()
-        }
     }
 }

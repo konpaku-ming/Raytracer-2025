@@ -2,7 +2,8 @@ use crate::camera::Camera;
 use crate::hit_checker::{HitRecord, Hittable, HittableList, degrees_to_radians};
 use crate::interval::Interval;
 use crate::material::ScatterRecord;
-use crate::pdf::{HittablePdf, MixturePdf, Pdf};
+use crate::pdf::{HittablePdf, Pdf};
+use crate::random::random_double;
 use crate::ray::Ray;
 use crate::sketchpad::Sketchpad;
 use crate::vec3::{Point3, Vec3, cross, unit_vector};
@@ -105,10 +106,17 @@ impl RayTracer {
             }
 
             let light_ptr = Arc::new(HittablePdf::new(lights.clone(), rec.pos));
-            let mixed_pdf = MixturePdf::new(light_ptr, s_rec.pdf_ptr);
 
-            let scattered = Ray::new_with_time(rec.pos, mixed_pdf.generate(), ray.time());
-            let pdf_value = mixed_pdf.value(*scattered.direction());
+            let generate = if random_double() < 0.5 {
+                light_ptr.generate()
+            } else {
+                s_rec.pdf_ptr.generate()
+            };
+
+            let scattered = Ray::new_with_time(rec.pos, generate, ray.time());
+
+            let direction = *scattered.direction();
+            let pdf_value = 0.5 * light_ptr.value(direction) + 0.5 * s_rec.pdf_ptr.value(direction);
 
             let scattering_pdf = rec.mat.scattering_pdf(ray, &rec, &scattered);
 

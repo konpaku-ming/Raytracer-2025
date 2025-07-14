@@ -39,15 +39,9 @@ pub struct Triangle<T: Texture> {
 
 impl<T: Texture> Triangle<T> {
     pub fn new(
-        p0: Point3,
-        p1: Point3,
-        p2: Point3,
-        uv0: UV,
-        uv1: UV,
-        uv2: UV,
-        n0: Vec3,
-        n1: Vec3,
-        n2: Vec3,
+        (p0, p1, p2): (Point3, Point3, Point3),
+        (uv0, uv1, uv2): (UV, UV, UV),
+        (n0, n1, n2): (Vec3, Vec3, Vec3),
         mat: Arc<Lambertian<T>>,
     ) -> Self {
         let e1 = p1 - p0;
@@ -105,7 +99,7 @@ impl<T: Texture + 'static> Hittable for Triangle<T> {
         let f = 1.0 / a;
         let s = *ray.origin() - self.p0;
         let u = f * dot(&s, &h);
-        if u < 0.0 || u > 1.0 {
+        if !(0.0..=1.0).contains(&u) {
             return false;
         }
 
@@ -181,7 +175,7 @@ pub fn obj_loader(obj_path: &str, mtl_path: &str, rate: f64) -> Vec<Triangle<Map
 
     let mut material_map = HashMap::new();
 
-    let mtl_path = format!("{}", mtl_path);
+    let mtl_path = mtl_path.to_string();
 
     if let Ok(parsed) = std::panic::catch_unwind(|| parse_mtl_file(&mtl_path)) {
         for (_, info) in parsed {
@@ -269,15 +263,9 @@ pub fn obj_loader(obj_path: &str, mtl_path: &str, rate: f64) -> Vec<Triangle<Map
             let n2 = get_normal(2);
 
             triangles.push(Triangle::new(
-                v0,
-                v1,
-                v2,
-                uv0,
-                uv1,
-                uv2,
-                n0,
-                n1,
-                n2,
+                (v0, v1, v2),
+                (uv0, uv1, uv2),
+                (n0, n1, n2),
                 material.clone(),
             ));
         }
