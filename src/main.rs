@@ -17,7 +17,7 @@ fn main() {
 fn final_scene() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 1600;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 10000;
     let max_depth = 50;
     let v_fov = 40.0;
     let look_from = Point3::new(160.0, 325.0, 420.0);
@@ -52,20 +52,6 @@ fn final_scene() {
         Point3::new(60.0, 300.0, 500.0),
         Vec3::new(10.0, 0.0, 0.0),
         Vec3::new(0.0, 10.0, 0.0),
-        empty_material.clone(),
-    )));
-
-    world.add(Arc::new(Quad::new(
-        Point3::new(-150.0, 0.0, 200.0),
-        Vec3::new(15.0, 0.0, 0.0),
-        Vec3::new(0.0, 20.0, 0.0),
-        light.clone(),
-    )));
-
-    lights.add(Arc::new(Quad::new(
-        Point3::new(-150.0, 0.0, 200.0),
-        Vec3::new(15.0, 0.0, 0.0),
-        Vec3::new(0.0, 20.0, 0.0),
         empty_material.clone(),
     )));
 
